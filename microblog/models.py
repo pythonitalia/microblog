@@ -45,9 +45,10 @@ class Post(models.Model):
         Ritorna il PostContent nella lingua specificata.
         Se il PostContent non esiste e fallback è False viene sollevata
         l'eccezione ObjectDoesNotExist. Se fallback è True viene prima
-        ricercato il PostContent nella lingua di default del sito, se non
-        esiste viene ritornato il primo PostContent esistente, se non esiste
-        neanche questo viene sollevata l'eccezione ObjectDoesNotExist.
+        ricercato il PostContent nella lingua di default del blog, poi in
+        quella del sito, se non esiste viene ritornato il primo PostContent
+        esistente, se non esiste neanche questo viene sollevata l'eccezione
+        ObjectDoesNotExist.
         """
         contents = dict((c.language, c) for c in self.postcontent_set.exclude(headline=''))
         if not contents:
