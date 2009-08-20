@@ -2,7 +2,9 @@
 from __future__ import absolute_import
 import re
 from django import template
+from django.conf import settings as dsettings
 from django.contrib.sites.models import Site
+from django.template.loader import render_to_string
 from microblog import models
 from microblog import settings
 
@@ -79,6 +81,49 @@ def show_post_detail(context, content, options=None):
         'MEDIA_URL': context['MEDIA_URL'],
         'request': request,
     }
+
+class DjangoComments(template.Node):
+    def __init__(self, content):
+        self.content = template.Variable(content)
+
+    def render(self, context):
+        content = self.content.resolve(context)
+        return render_to_string(
+            'microblog/show_django_comments.html',
+            {
+                'content': content,
+                'post': content.post,
+             }
+        )
+        return ''
+
+class DisqusComments(template.Node):
+    def __init__(self, content):
+        self.content = template.Variable(content)
+
+    def render(self, context):
+        content = self.content.resolve(context)
+        return render_to_string(
+            'microblog/show_disqus_comments.html',
+            {
+                'embed': settings.MICROBLOG_COMMENT_DISQUS_EMBED,
+                'debug': dsettings.DEBUG,
+            }
+        )
+        return ''
+
+@register.tag
+def show_post_comments(parser, token):
+    contents = token.split_contents()
+    tag_name = contents.pop(0)
+    content  = contents.pop(0)
+    if contents:
+        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+    if settings.MICROBLOG_COMMENT == 'comment':
+        comment = DjangoComments(content)
+    else:
+        comment = DisqusComments(content)
+    return comment
 
 @register.inclusion_tag('microblog/show_social_networks.html', takes_context=True)
 def show_social_networks(context, content):

@@ -15,3 +15,9 @@ MICROBLOG_TRACKBACK_SERVER = getattr(settings, 'MICROBLOG_TRACKBACK_SERVER', Tru
 
 MICROBLOG_TITLE = getattr(settings, 'MICROBLOG_TITLE', 'My Microblog')
 MICROBLOG_DESCRIPTION = getattr(settings, 'MICROBLOG_DESCRIPTION', '')
+
+# select the comment system: comment (django) or disqus
+MICROBLOG_COMMENT = getattr(settings, 'MICROBLOG_COMMENT', 'comment')
+
+# Disqus embed code
+MICROBLOG_COMMENT_DISQUS_EMBED = getattr(settings, 'MICROBLOG_COMMENT_DISQUS_EMBED', '')
