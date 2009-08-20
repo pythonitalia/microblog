@@ -16,6 +16,11 @@ urlpatterns = patterns('',
         'microblog.views.post_detail',
         name = 'microblog-post-detail'
     ),
+    url(
+        r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/trackback$',
+        'microblog.views.trackback_ping',
+        name = 'microblog-post-trackback'
+    ),
     (r'^comments/', include('django.contrib.comments.urls')),
     (r'^feeds/(?P<url>.*)/$', 'django.contrib.syndication.views.feed', {'feed_dict': {'latest': feeds.LatestPosts}}),
 )

@@ -5,6 +5,7 @@ Template utilizzato dal tag show_post_detail
 {% endcomment %}
 {% if content %}
 <div class="microblog post-detail">
+    {% trackback_rdf content %}
     <h1>
         {% if not post.is_published %}
         <span class="draft">[DRAFT]</span>

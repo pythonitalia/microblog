@@ -2,6 +2,8 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
+from django_urls import UrlMixin
 import tagging
 import tagging.fields
 
@@ -61,7 +63,22 @@ class Post(models.Model):
         except KeyError:
             return contents.values()[0]
 
-class PostContent(models.Model):
+    def get_trackback_url(self):
+        date = self.date
+        content = self.postcontent_set.all()[0]
+        return content.get_url() + '/trackback'
+
+    def new_trackback(self, url, blog_name='', title='', excerpt=''):
+        tb = Trackback()
+        tb.post = self
+        tb.url = url
+        tb.blog_name = blog_name
+        tb.title = title
+        tb.excerpt = excerpt
+        tb.save()
+        return tb
+
+class PostContent(models.Model, UrlMixin):
     post = models.ForeignKey(Post)
     language = models.CharField(max_length = 3)
     headline = models.CharField(max_length = 200)
@@ -78,4 +95,15 @@ class PostContent(models.Model):
             'day': str(date.day).zfill(2),
             'slug': self.slug
         })
+
+    get_url_path = get_absolute_url
+
+class Trackback(models.Model):
+    post = models.ForeignKey(Post)
+    type = models.CharField(max_length = 2, default = 'tb')
+    date = models.DateTimeField(auto_now_add = True)
+    url = models.CharField(max_length = 1000)
+    blog_name = models.TextField()
+    title = models.TextField()
+    excerpt = models.TextField()
 

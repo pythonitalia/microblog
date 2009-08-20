@@ -92,6 +92,12 @@ def show_social_networks(context, content):
         'request': request,
     }
 
+@register.inclusion_tag('microblog/trackback_rdf.xml')
+def trackback_rdf(content):
+    return {
+        'content': content
+    }
+
 class PostContent(template.Node):
     def __init__(self, arg, var_name):
         try:
@@ -153,3 +159,4 @@ def prepare_summary(postcontent):
     else:
         summary += link
     return summary
+
