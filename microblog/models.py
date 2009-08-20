@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 from django.db import models
-from django.conf import settings
+import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django_urls import UrlMixin
@@ -59,9 +59,11 @@ class Post(models.Model):
                 raise PostContent.DoesNotExist()
 
         try:
-            return contents[settings.LANGUAGES[0][0]]
+            c = contents[settings.MICROBLOG_DEFAULT_LANGUAGE]
+            c = contents[settings.LANGUAGES[0][0]]
         except KeyError:
-            return contents.values()[0]
+            c = contents.values()[0]
+        return c
 
     def get_trackback_url(self):
         date = self.date

@@ -1,14 +1,12 @@
 # -*- coding: UTF-8 -*-
 import os.path
-from django.conf import settings
+import settings
+from django.conf import settings as dsettings
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.syndication.feeds import Feed, FeedDoesNotExist
 from microblog import models
 
 from tagging.models import Tag
-
-def g(key, value):
-    return getattr(settings, key, value)
 
 class LatestPosts(Feed):
 
@@ -20,11 +18,8 @@ class LatestPosts(Feed):
                     return super(D, self).__getitem__(k)
                 except KeyError:
                     raise FeedDoesNotExist()
-        self.languages = D((l, l) for l, n in settings.LANGUAGES)
-        try:
-            self.languages[None] = settings.MICROBLOG_DEFAULT_LANGUAGE
-        except AttributeError:
-            self.languages[None] = settings.LANGUAGES[0][0]
+        self.languages = D((l, l) for l, n in dsettings.LANGUAGES)
+        self.languages[None] = settings.MICROBLOG_DEFAULT_LANGUAGE
 
     def get_object(self, lang_code):
         if not lang_code:
@@ -35,10 +30,10 @@ class LatestPosts(Feed):
 
     def link(self, obj):
         l = self.languages[obj]
-        return os.path.join(g('MICROBLOG_LINK', '/'), l)
+        return os.path.join(dsettings.DEFAULT_URL_PREFIX, l)
 
-    title = g('MICROBLOG_TITLE', 'Microblog feed')
-    description = g('MICROBLOG_DESCRIPTION', 'latest post')
+    title = settings.MICROBLOG_TITLE
+    description = settings.MICROBLOG_DESCRIPTION
 
     def items(self, obj):
         l = self.languages[obj]

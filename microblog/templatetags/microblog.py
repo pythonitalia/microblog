@@ -2,9 +2,9 @@
 from __future__ import absolute_import
 import re
 from django import template
-from django.conf import settings
 from django.contrib.sites.models import Site
 from microblog import models
+from microblog import settings
 
 register = template.Library()
 
@@ -17,7 +17,7 @@ class LastBlogPost(template.Node):
         query = models.Post.objects.published()
         if self.limit:
             query = query[:self.limit]
-        lang = context.get('LANGUAGE_CODE', settings.LANGUAGES[0][0])
+        lang = context.get('LANGUAGE_CODE', settings.MICROBLOG_DEFAULT_LANGUAGE)
         posts = [ (p, p.content(lang)) for p in query ]
         context[self.var_name] = posts
         return ''
@@ -114,7 +114,7 @@ class PostContent(template.Node):
         except template.VariableDoesNotExist:
             pid = None
         if pid:
-            dlang = settings.LANGUAGES[0][0]
+            dlang = settings.MICROBLOG_DEFAULT_LANGUAGE
             lang = context.get('LANGUAGE_CODE', dlang)
             contents = dict((c.language, c) for c in models.PostContent.objects.filter(post = pid))
             for l in (lang, dlang) + tuple(contents.keys()):
