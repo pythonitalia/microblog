@@ -1,9 +1,38 @@
 import datetime
 from microblog import models
 
+from django.conf import settings as dsettings
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.shortcuts import render_to_response, get_object_or_404
+
+import simplejson
+from decorator import decorator
+
+def json(f):
+    """
+    decoratore da applicare ad una vista per serializzare in json il risultato.
+    """
+    if dsettings.DEBUG:
+        ct = 'text/plain'
+        j = lambda d: simplejson.dumps(d, indent = 2)
+    else:
+        ct = 'application/json'
+        j = simplejson.dumps
+    def wrapper(func, *args, **kw):
+        try:
+            result = func(*args, **kw)
+        except Exception, e:
+            result = j(str(e))
+            status = 500
+        else:
+            if isinstance(result, HttpResponse):
+                return result
+            else:
+                result = j(result)
+                status = 200
+        return HttpResponse(content = result, content_type = ct, status = status)
+    return decorator(wrapper, f)
 
 def post_detail(request, year, month, day, slug):
     postcontent = get_object_or_404(
