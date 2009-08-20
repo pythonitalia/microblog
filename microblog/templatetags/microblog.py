@@ -7,6 +7,7 @@ from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from microblog import models
 from microblog import settings
+from random import randint
 
 register = template.Library()
 
@@ -93,9 +94,8 @@ class DjangoComments(template.Node):
             {
                 'content': content,
                 'post': content.post,
-             }
+            }
         )
-        return ''
 
 class DisqusComments(template.Node):
     def __init__(self, content):
@@ -106,11 +106,12 @@ class DisqusComments(template.Node):
         return render_to_string(
             'microblog/show_disqus_comments.html',
             {
+                'content': content,
+                'post': content.post,
                 'embed': settings.MICROBLOG_COMMENT_DISQUS_EMBED,
                 'debug': dsettings.DEBUG,
             }
         )
-        return ''
 
 @register.tag
 def show_post_comments(parser, token):
@@ -124,6 +125,50 @@ def show_post_comments(parser, token):
     else:
         comment = DisqusComments(content)
     return comment
+
+class DjangoCountComments(template.Node):
+    def __init__(self, content):
+        self.content = template.Variable(content)
+
+    def render(self, context):
+        content = self.content.resolve(context)
+        return render_to_string(
+            'microblog/show_django_count_comments.html',
+            {
+                'content': content,
+                'post': post,
+            }
+        ).strip()
+
+class DisqusCountComments(template.Node):
+    def __init__(self, content):
+        self.content = template.Variable(content)
+
+    def render(self, context):
+        content = self.content.resolve(context)
+        return render_to_string(
+            'microblog/show_disqus_count_comments.html',
+            {
+                'content': content,
+                'post': content.post,
+                'forum_key': settings.MICROBLOG_COMMENT_DISQUS_FORUM_KEY,
+                'random_id': 'i%s' % (randint(0, 100000), ),
+            }
+        ).strip()
+
+@register.tag
+def show_post_comment_count(parser, token):
+    contents = token.split_contents()
+    tag_name = contents[0]
+    try:
+        content = contents[1]
+    except IndexError:
+        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+    if settings.MICROBLOG_COMMENT == 'comment':
+        counter = DjangoCountComments(content)
+    else:
+        counter = DisqusCountComments(content)
+    return counter
 
 @register.inclusion_tag('microblog/show_social_networks.html', takes_context=True)
 def show_social_networks(context, content):

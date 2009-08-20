@@ -1,4 +1,4 @@
-{% load comments microblog %}
+{% load microblog %}
 {% comment %}
 Template utilizzato dal tag show_post_summary
 {% endcomment %}
@@ -16,9 +16,8 @@ Template utilizzato dal tag show_post_summary
     <p class="metadata">
         <b>{{ post.author.first_name }}</b>
         {{ post.date|timesince }} |
-        {% get_comment_count for post as count %}
         <a title="Commenti articolo" href="{{ content.get_absolute_url }}#last-comment">
-            Commenti ({{ count }})
+            Commenti ({% show_post_comment_count content %})
         </a>
     </p>
 </div>

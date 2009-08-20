@@ -1,5 +1,5 @@
 import datetime
-from microblog import models
+from microblog import models, settings
 
 from django.conf import settings as dsettings
 from django.http import HttpResponse
@@ -82,3 +82,41 @@ def trackback_ping(request, year, month, day, slug):
     }
     post.new_trackback(**t)
     return success()
+
+@json
+def comment_count(request, year, month, day, slug):
+    postcontent = get_object_or_404(
+        models.PostContent,
+        slug = slug,
+        post__date__year = int(year),
+        post__date__month = int(month),
+        post__date__day = int(day)
+    )
+    post = postcontent.post
+    if settings.MICROBLOG_COMMENT == 'comment':
+        from django.contrib import comments
+        from django.contrib.contenttypes.models import ContentType
+        model = comments.get_model()
+        q = model.objects.filter(
+            content_type = ContentType.objects.get_for_model(post),
+            object_pk = post.id,
+            is_public = True
+        )
+        return q.count()
+    else:
+        import httplib2
+        from urllib import quote
+        h = httplib2.Http()
+        params = {
+            'forum_api_key': settings.MICROBLOG_COMMENT_DISQUS_FORUM_KEY,
+            'url': postcontent.get_url(),
+        }
+        args = '&'.join('%s=%s' % (k,quote(v)) for k, v in params.items())
+        url = settings.MICROBLOG_COMMENT_DISQUS_API_URL + 'get_thread_by_url?%s' % args
+        resp, content = h.request(url)
+        if resp.status != 200:
+            return -1
+        content = simplejson.loads(content)
+        if not content['succeeded']:
+            return -1
+        return content['message']['num_comments']

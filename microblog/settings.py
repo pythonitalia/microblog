@@ -21,3 +21,8 @@ MICROBLOG_COMMENT = getattr(settings, 'MICROBLOG_COMMENT', 'comment')
 
 # Disqus embed code
 MICROBLOG_COMMENT_DISQUS_EMBED = getattr(settings, 'MICROBLOG_COMMENT_DISQUS_EMBED', '')
+
+# forum key code (needed to enable comments count)
+MICROBLOG_COMMENT_DISQUS_FORUM_KEY = getattr(settings, 'MICROBLOG_COMMENT_DISQUS_FORUM_KEY', None)
+
+MICROBLOG_COMMENT_DISQUS_API_URL = 'http://disqus.com/api/'
