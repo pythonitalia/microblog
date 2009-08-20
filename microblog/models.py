@@ -5,6 +5,13 @@ from django.contrib.auth.models import User
 import tagging
 import tagging.fields
 
+class Category(models.Model):
+    name = models.CharField(max_length = 100)
+    description = models.TextField(blank = True)
+
+    def __unicode__(self):
+        return self.name
+
 POST_STATUS = (('P', 'Pubblicato'), ('D', 'Bozza'))
 
 class PostManager(models.Manager):
@@ -17,6 +24,7 @@ class Post(models.Model):
     status = models.CharField(max_length = 1, default = 'P', choices = POST_STATUS)
     allow_comments = models.BooleanField()
     tags = tagging.fields.TagField()
+    categories = models.ManyToManyField(Category)
 
     objects = PostManager()
 

@@ -53,7 +53,7 @@ class PostAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None, **kwargs):
         fieldsets = [
             (None, {
-                'fields': ('date', 'author', 'status', 'tags', 'allow_comments')
+                'fields': ('date', 'author', 'status', 'tags', 'categories', 'allow_comments')
             })
         ]
         prepopulated_fields = {}
@@ -128,3 +128,9 @@ class PostAdmin(admin.ModelAdmin):
             instance.save()
 
 admin.site.register(models.Post, PostAdmin)
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+
+admin.site.register(models.Category, CategoryAdmin)
+
