@@ -2,5 +2,6 @@
 {% if debug %}
 disqus_developer = true;
 {% endif %}
+disqus_title = "{{ content.headline|escapejs }}";
 </script>
 {{ embed|safe }}
