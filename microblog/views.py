@@ -61,14 +61,13 @@ def trackback_ping(request, year, month, day, slug):
         return failure('url argument is mandatory')
 
     postcontent = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
-    post = postcontent.post
     t = {
         'url': request.POST['url'],
         'blog_name': request.POST.get('blog_name', ''),
         'title': request.POST.get('title', ''),
         'excerpt': request.POST.get('excerpt', ''),
     }
-    post.new_trackback(**t)
+    postcontent.new_trackback(**t)
     return success()
 
 @json
@@ -101,4 +100,7 @@ def comment_count(request, year, month, day, slug):
         content = simplejson.loads(content)
         if not content['succeeded']:
             return -1
-        return content['message']['num_comments']
+        elif content['message'] is None:
+            return 0
+        else:
+            return content['message']['num_comments']
