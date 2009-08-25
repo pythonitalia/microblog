@@ -35,13 +35,7 @@ def json(f):
     return decorator(wrapper, f)
 
 def post_detail(request, year, month, day, slug):
-    postcontent = get_object_or_404(
-        models.PostContent, 
-        slug = slug, 
-        post__date__year = int(year),
-        post__date__month = int(month),
-        post__date__day = int(day)
-    )
+    postcontent = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
     return render_to_response(
         'microblog/post_detail.html',
         {
@@ -66,13 +60,7 @@ def trackback_ping(request, year, month, day, slug):
     if not request.POST.get('url'):
         return failure('url argument is mandatory')
 
-    postcontent = get_object_or_404(
-        models.PostContent, 
-        slug = slug, 
-        post__date__year = int(year),
-        post__date__month = int(month),
-        post__date__day = int(day)
-    )
+    postcontent = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
     post = postcontent.post
     t = {
         'url': request.POST['url'],
@@ -85,13 +73,7 @@ def trackback_ping(request, year, month, day, slug):
 
 @json
 def comment_count(request, year, month, day, slug):
-    postcontent = get_object_or_404(
-        models.PostContent,
-        slug = slug,
-        post__date__year = int(year),
-        post__date__month = int(month),
-        post__date__day = int(day)
-    )
+    postcontent = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
     post = postcontent.post
     if settings.MICROBLOG_COMMENT == 'comment':
         from django.contrib import comments

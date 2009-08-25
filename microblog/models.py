@@ -81,6 +81,15 @@ class Post(models.Model):
         tb.save()
         return tb
 
+class PostContentManager(models.Manager):
+    def getBySlugAndDate(self, slug, year, month, day):
+        return self.get(
+            slug = slug,
+            post__date__year = int(year),
+            post__date__month = int(month),
+            post__date__day = int(day),
+        )
+
 class PostContent(models.Model, UrlMixin):
     post = models.ForeignKey(Post)
     language = models.CharField(max_length = 3)
@@ -88,6 +97,8 @@ class PostContent(models.Model, UrlMixin):
     slug = models.SlugField(unique_for_date = 'post.date')
     summary = models.TextField()
     body = models.TextField()
+
+    objects = PostContentManager()
 
     @models.permalink
     def get_absolute_url(self):
