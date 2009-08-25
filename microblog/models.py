@@ -113,7 +113,7 @@ class PostContent(models.Model, UrlMixin):
     get_url_path = get_absolute_url
 
 class Trackback(models.Model):
-    post = models.ForeignKey(Post)
+    content = models.ForeignKey(PostContent)
     type = models.CharField(max_length = 2, default = 'tb')
     date = models.DateTimeField(auto_now_add = True)
     url = models.CharField(max_length = 1000)
