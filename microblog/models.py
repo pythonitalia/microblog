@@ -71,16 +71,6 @@ class Post(models.Model):
         content = self.postcontent_set.all()[0]
         return content.get_url() + '/trackback'
 
-    def new_trackback(self, url, blog_name='', title='', excerpt=''):
-        tb = Trackback()
-        tb.post = self
-        tb.url = url
-        tb.blog_name = blog_name
-        tb.title = title
-        tb.excerpt = excerpt
-        tb.save()
-        return tb
-
 class PostContentManager(models.Manager):
     def getBySlugAndDate(self, slug, year, month, day):
         return self.get(
@@ -111,6 +101,16 @@ class PostContent(models.Model, UrlMixin):
         })
 
     get_url_path = get_absolute_url
+
+    def new_trackback(self, url, blog_name='', title='', excerpt=''):
+        tb = Trackback()
+        tb.content = self
+        tb.url = url
+        tb.blog_name = blog_name
+        tb.title = title
+        tb.excerpt = excerpt
+        tb.save()
+        return tb
 
 class Trackback(models.Model):
     content = models.ForeignKey(PostContent)
