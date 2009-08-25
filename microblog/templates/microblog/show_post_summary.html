@@ -10,9 +10,7 @@ Template utilizzato dal tag show_post_summary
         {% endif %}
         <a title="Permalink a questo articolo" href="{{ content.get_absolute_url }}">{{ content.headline }}</a>
     </h2>
-    <div class="summary">
-        {{ content|prepare_summary|safe }}
-    </div>
+    <div class="summary">{{ content|prepare_summary|safe }}</div>
     <p class="metadata">
         <b>{{ post.author.first_name }}</b>
         {{ post.date|timesince }} |

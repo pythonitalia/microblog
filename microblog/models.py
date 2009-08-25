@@ -121,3 +121,6 @@ class Trackback(models.Model):
     title = models.TextField()
     excerpt = models.TextField()
 
+    class Meta:
+        ordering = ['-date']
+
