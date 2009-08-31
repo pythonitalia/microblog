@@ -1,0 +1,17 @@
+{% extends "microblog/base.html" %}
+{% load microblog %}
+{% block BLOG_HEADER %}
+  <h1>{{ category.post_set.count }} posts in "{{ category.name }}"</h1>
+  <p>{{ category.description }}</p> 
+{% endblock %}
+{% block BLOG_CONTENT %}
+  <ul>
+    {% for post in category.post_set.all %}
+      <li>
+        {% show_post_summary post %}
+      </li>
+    {% empty %}
+        <li>No posts</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

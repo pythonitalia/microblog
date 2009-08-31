@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import datetime
 from microblog import models, settings
+from tagging import models as taggingModels
 
 from django.conf import settings as dsettings
 from django.http import HttpResponse
@@ -35,6 +36,28 @@ def json(f):
         return HttpResponse(content = result, content_type = ct, status = status)
     return decorator(wrapper, f)
 
+def category(request, category):
+    category = get_object_or_404(models.Category, name = category)
+    return render_to_response(
+        'microblog/category.html',
+        {
+            'category': category,
+        },
+        context_instance = RequestContext(request)
+    )
+
+def tag(request, tag):
+    tag = get_object_or_404(taggingModels.Tag, name = tag)
+    posts = taggingModels.TaggedItem.objects.get_by_model(models.Post, tag)
+    return render_to_response(
+        'microblog/tag.html',
+        {
+            'tag': tag,
+            'posts': posts,
+        },
+        context_instance = RequestContext(request)
+    )
+    
 def _post_detail(request, content):
     return render_to_response(
         'microblog/post_detail.html',

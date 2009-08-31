@@ -11,7 +11,21 @@ urlpatterns = patterns('',
         },
         name = 'microblog-full-list'
     ),
-    (r'^feeds/(?P<url>.*)/$', 'django.contrib.syndication.views.feed', {'feed_dict': {'latest': feeds.LatestPosts}}),
+    url(
+        r'^feeds/(?P<url>.*)/$',
+        'django.contrib.syndication.views.feed',
+        {'feed_dict': {'latest': feeds.LatestPosts}}
+    ),
+    url(
+        r'^categories/(?P<category>.*)$',
+        'microblog.views.category',
+        name = 'microblog-category',
+    ),
+    url(
+        r'^tags/(?P<tag>.*)$',
+        'microblog.views.tag',
+        name = 'microblog-tag',
+    ),
 )
 if settings.MICROBLOG_URL_STYLE == 'date':
     urlpatterns += patterns('',
