@@ -17,6 +17,8 @@
       <li>
         {% show_post_summary post %}
       </li>
+    {% empty %}
+        <li>Empty blog</li>
     {% endfor %}
   </ul>
 {% endblock %}

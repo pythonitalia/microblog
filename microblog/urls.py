@@ -11,23 +11,44 @@ urlpatterns = patterns('',
         },
         name = 'microblog-full-list'
     ),
-    url(
-        r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/?$',
-        'microblog.views.post_detail',
-        name = 'microblog-post-detail'
-    ),
-    url(
-        r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/trackback$',
-        'microblog.views.trackback_ping',
-        name = 'microblog-post-trackback'
-    ),
-    url(
-        r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/comment_count$',
-        'microblog.views.comment_count',
-        name = 'microblog-post-comment-count'
-    ),
     (r'^feeds/(?P<url>.*)/$', 'django.contrib.syndication.views.feed', {'feed_dict': {'latest': feeds.LatestPosts}}),
 )
+if settings.MICROBLOG_URL_STYLE == 'date':
+    urlpatterns += patterns('',
+        url(
+            r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/?$',
+            'microblog.views.post_detail',
+            name = 'microblog-post-detail'
+        ),
+        url(
+            r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/trackback$',
+            'microblog.views.trackback_ping',
+            name = 'microblog-post-trackback'
+        ),
+        url(
+            r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/comment_count$',
+            'microblog.views.comment_count',
+            name = 'microblog-post-comment-count'
+        ),
+    )
+elif settings.MICROBLOG_URL_STYLE == 'category':
+    urlpatterns += patterns('',
+        url(
+            r'^(?P<category>[^/]+)/(?P<slug>[^/]+)/?$',
+            'microblog.views.post_detail',
+            name = 'microblog-post-detail'
+        ),
+        url(
+            r'^(?P<category>[^/]+)/(?P<slug>[^/]+)/trackback$',
+            'microblog.views.trackback_ping',
+            name = 'microblog-post-trackback'
+        ),
+        url(
+            r'^(?P<category>[^/]+)/(?P<slug>[^/]+)/comment_count$',
+            'microblog.views.comment_count',
+            name = 'microblog-post-comment-count'
+        ),
+    )
 
 if settings.MICROBLOG_COMMENT == 'comment':
     urlpatterns += patterns('',

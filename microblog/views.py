@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import datetime
 from microblog import models, settings
 
@@ -34,18 +35,17 @@ def json(f):
         return HttpResponse(content = result, content_type = ct, status = status)
     return decorator(wrapper, f)
 
-def post_detail(request, year, month, day, slug):
-    postcontent = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
+def _post_detail(request, content):
     return render_to_response(
         'microblog/post_detail.html',
         {
-            'post': postcontent.post,
-            'content': postcontent
+            'post': content.post,
+            'content': content
         },
         context_instance = RequestContext(request)
     )
 
-def trackback_ping(request, year, month, day, slug):
+def _trackback_ping(request, content):
     def success():
         x = ('<?xml version="1.0" encoding="utf-8"?>\n'
             '<response><error>0</error></response>')
@@ -55,25 +55,25 @@ def trackback_ping(request, year, month, day, slug):
         x = ('<?xml version="1.0" encoding="utf-8"?>\n'
             '<response><error>1</error><message>%s</message></response>') % message
         return HttpResponse(content = x, content_type = 'text/xml', status = 400)
+
     if request.method != 'POST':
         return failure('only POST methos is supported')
+
     if not request.POST.get('url'):
         return failure('url argument is mandatory')
 
-    postcontent = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
     t = {
         'url': request.POST['url'],
         'blog_name': request.POST.get('blog_name', ''),
         'title': request.POST.get('title', ''),
         'excerpt': request.POST.get('excerpt', ''),
     }
-    postcontent.new_trackback(**t)
+    content.new_trackback(**t)
     return success()
 
 @json
-def comment_count(request, year, month, day, slug):
-    postcontent = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
-    post = postcontent.post
+def _comment_count(request, content):
+    post = content.post
     if settings.MICROBLOG_COMMENT == 'comment':
         from django.contrib import comments
         from django.contrib.contenttypes.models import ContentType
@@ -90,17 +90,56 @@ def comment_count(request, year, month, day, slug):
         h = httplib2.Http()
         params = {
             'forum_api_key': settings.MICROBLOG_COMMENT_DISQUS_FORUM_KEY,
-            'url': postcontent.get_url(),
+            'url': content.get_url(),
         }
         args = '&'.join('%s=%s' % (k,quote(v)) for k, v in params.items())
         url = settings.MICROBLOG_COMMENT_DISQUS_API_URL + 'get_thread_by_url?%s' % args
-        resp, content = h.request(url)
+
+        resp, page = h.request(url)
         if resp.status != 200:
             return -1
-        content = simplejson.loads(content)
-        if not content['succeeded']:
+        page = simplejson.loads(page)
+        if not page['succeeded']:
             return -1
-        elif content['message'] is None:
+        elif page['message'] is None:
             return 0
         else:
-            return content['message']['num_comments']
+            return page['message']['num_comments']
+
+if settings.MICROBLOG_URL_STYLE == 'date':
+    def post_detail(request, year, month, day, slug):
+        return _post_detail(
+            request,
+            content = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
+        )
+
+    def trackback_ping(request, year, month, day, slug):
+        return _trackback_ping(
+            request,
+            content = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
+        )
+
+    def comment_count(request, year, month, day, slug):
+        return _comment_count(
+            request,
+            content = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
+        )
+elif settings.MICROBLOG_URL_STYLE == 'category':
+    def post_detail(request, category, slug):
+        return _post_detail(
+            request,
+            content = models.PostContent.objects.getBySlugAndCategory(slug, category)
+        )
+
+    def trackback_ping(request, category, slug):
+        return _trackback_ping(
+            request,
+            content = models.PostContent.objects.getBySlugAndCategory(slug, category)
+        )
+
+    @json
+    def comment_count(request, category, slug):
+        return _comment_count(
+            request,
+            content = models.PostContent.objects.getBySlugAndCategory(slug, category)
+        )

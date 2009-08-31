@@ -26,7 +26,7 @@ class Post(models.Model):
     status = models.CharField(max_length = 1, default = 'P', choices = POST_STATUS)
     allow_comments = models.BooleanField()
     tags = tagging.fields.TagField()
-    categories = models.ManyToManyField(Category)
+    category = models.ForeignKey(Category)
 
     objects = PostManager()
 
@@ -80,6 +80,12 @@ class PostContentManager(models.Manager):
             post__date__day = int(day),
         )
 
+    def getBySlugAndCategory(self, slug, category):
+        return self.get(
+            slug = slug,
+            post__category__name = category,
+        )
+
 class PostContent(models.Model, UrlMixin):
     post = models.ForeignKey(Post)
     language = models.CharField(max_length = 3)
@@ -92,13 +98,19 @@ class PostContent(models.Model, UrlMixin):
 
     @models.permalink
     def get_absolute_url(self):
-        date = self.post.date
-        return ('microblog-post-detail', (), {
-            'year': str(date.year),
-            'month': str(date.month).zfill(2),
-            'day': str(date.day).zfill(2),
-            'slug': self.slug
-        })
+        if settings.MICROBLOG_URL_STYLE == 'date':
+            date = self.post.date
+            return ('microblog-post-detail', (), {
+                'year': str(date.year),
+                'month': str(date.month).zfill(2),
+                'day': str(date.day).zfill(2),
+                'slug': self.slug
+            })
+        elif settings.MICROBLOG_URL_STYLE == 'category':
+            return ('microblog-post-detail', (), {
+                'category': self.post.category.name,
+                'slug': self.slug
+            })
 
     get_url_path = get_absolute_url
 

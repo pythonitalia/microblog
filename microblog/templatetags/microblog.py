@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 import re
 from django import template
+from django.db.models import Count
 from django.conf import settings as dsettings
 from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
@@ -44,6 +45,36 @@ def last_blog_post(parser, token):
     except IndexError:
         raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
     return LastBlogPost(limit, var_name)
+
+@register.tag
+def category_list(parser, token):
+    """
+    {% category_list ["include-empty"] as var_name %}
+    """
+    class Categories(template.Node):
+        def __init__(self, include_empty, var_name):
+            self.include_empty = bool(include_empty)
+            self.var_name = var_name
+        def render(self, context):
+            c = models.Category.objects.all().order_by('name')
+            if not self.include_empty:
+                c = c.annotate(count = Count('post')).filter(count__gt = 0)
+            context[self.var_name] = c
+            return ''
+
+    contents = token.split_contents()
+    tag_name = contents.pop(0)
+    if len(contents) > 2:
+        if contents.pop(0) != '"include-empty"':
+            raise template.TemplateSyntaxError("%r tag argument should be \"include-empty\"" % tag_name)
+        empty = True
+    else:
+        empty = False
+            
+    if contents[-2] != 'as':
+        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+    var_name = contents[-1]
+    return Categories(empty, var_name)
 
 @register.inclusion_tag('microblog/show_post_summary.html', takes_context=True)
 def show_post_summary(context, post):
