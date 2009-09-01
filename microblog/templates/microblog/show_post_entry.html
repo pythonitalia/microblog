@@ -1,4 +1,7 @@
 {% load microblog %}
+{% comment %}
+Template utilizzato dal tag show_post_summary
+{% endcomment %}
 {% if content %}
 <div class="microblog post-summary">
     <h2>
@@ -7,7 +10,6 @@
         {% endif %}
         <a title="Permalink a questo articolo" href="{{ content.get_absolute_url }}">{{ content.headline }}</a>
     </h2>
-    <div class="summary">{{ content|prepare_summary|safe }}</div>
     <p class="metadata">
         <span class="blog-author-name">{{ post.author.first_name }} {{ post.author.last_name }}</span>
         {{ post.date|timesince }} |

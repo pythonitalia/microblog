@@ -99,9 +99,7 @@ def author_list(parser, token):
     var_name = contents[-1]
     return Authors(var_name)
 
-@register.inclusion_tag('microblog/show_post_summary.html', takes_context=True)
-def show_post_summary(context, post):
-    request = context['request']
+def _show_post_summary(context, post):
     if context['user'].is_anonymous() and not post.is_published():
         return {}
     lang = context['LANGUAGE_CODE']
@@ -117,25 +115,30 @@ def show_post_summary(context, post):
                 break
         else:
             raise ValueError('There is no a valid content (in any language)')
-    return {
+    context.update({
         'post': post,
         'content': content,
-        'MEDIA_URL': context['MEDIA_URL'],
-        'request': request,
-    }
+    })
+    return context
+
+@register.inclusion_tag('microblog/show_post_entry.html', takes_context=True)
+def show_post_entry(context, post):
+    return _show_post_summary(context, post)
+
+@register.inclusion_tag('microblog/show_post_summary.html', takes_context=True)
+def show_post_summary(context, post):
+    return _show_post_summary(context, post)
 
 @register.inclusion_tag('microblog/show_post_detail.html', takes_context=True)
 def show_post_detail(context, content, options=None):
-    request = context['request']
     if context['user'].is_anonymous() and not content.post.is_published():
         return {}
-    return {
+    context.update({
         'post': content.post,
         'options': options,
         'content': content,
-        'MEDIA_URL': context['MEDIA_URL'],
-        'request': request,
-    }
+    })
+    return context
 
 class DjangoComments(template.Node):
     def __init__(self, content):
