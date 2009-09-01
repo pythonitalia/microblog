@@ -2,10 +2,12 @@
 import datetime
 from microblog import models, settings
 from tagging import models as taggingModels
+from django.contrib.auth import models as authModels
 
 from django.conf import settings as dsettings
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.template import RequestContext
+from django.template.defaultfilters import slugify
 from django.shortcuts import render_to_response, get_object_or_404
 
 import simplejson
@@ -53,6 +55,25 @@ def tag(request, tag):
         'microblog/tag.html',
         {
             'tag': tag,
+            'posts': posts,
+        },
+        context_instance = RequestContext(request)
+    )
+
+def author(request, author):
+    user = [
+        u for u in authModels.User.objects.all()
+        if slugify('%s-%s' % (u.first_name, u.last_name)) == author
+    ]
+    if not user:
+        raise Http404()
+    else:
+        user = user[0]
+    posts = models.Post.objects.filter(author = user)
+    return render_to_response(
+        'microblog/author.html',
+        {
+            'author': user,
             'posts': posts,
         },
         context_instance = RequestContext(request)

@@ -1,14 +1,16 @@
 # -*- coding: UTF-8 -*-
 from __future__ import absolute_import
+
 import re
+from random import randint
 from django import template
 from django.db.models import Count
 from django.conf import settings as dsettings
 from django.contrib.sites.models import Site
+from django.template.defaultfilters import slugify
 from django.template.loader import render_to_string
-from microblog import models
-from microblog import settings
-from random import randint
+
+from microblog import models, settings
 
 register = template.Library()
 
@@ -75,6 +77,27 @@ def category_list(parser, token):
         raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
     var_name = contents[-1]
     return Categories(empty, var_name)
+
+@register.tag
+def author_list(parser, token):
+    """
+    {% author_list as var_name %}
+    """
+    class Authors(template.Node):
+        def __init__(self, var_name):
+            self.var_name = var_name
+
+        def render(self, context):
+            authors = set([ p.author for p in  models.Post.objects.all() ])
+            context[self.var_name] = authors
+            return ''
+
+    contents = token.split_contents()
+    tag_name = contents.pop(0)
+    if contents[-2] != 'as':
+        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+    var_name = contents[-1]
+    return Authors(var_name)
 
 @register.inclusion_tag('microblog/show_post_summary.html', takes_context=True)
 def show_post_summary(context, post):
@@ -297,3 +320,8 @@ def prepare_summary(postcontent):
         summary += link
     return summary
 
+@register.filter
+def user_name_for_url(user):
+    """
+    """
+    return slugify('%s-%s' % (user.first_name, user.last_name))

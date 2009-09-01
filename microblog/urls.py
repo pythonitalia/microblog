@@ -26,6 +26,11 @@ urlpatterns = patterns('',
         'microblog.views.tag',
         name = 'microblog-tag',
     ),
+    url(
+        r'^authors/(?P<author>.*)$',
+        'microblog.views.author',
+        name = 'microblog-author',
+    ),
 )
 if settings.MICROBLOG_URL_STYLE == 'date':
     urlpatterns += patterns('',

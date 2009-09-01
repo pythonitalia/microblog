@@ -1,0 +1,18 @@
+{% extends "microblog/base.html" %}
+{% load microblog %}
+{% block BLOG_HEADER %}
+  <h1>{{ posts|length }} posts from <span class="blog-author-name">{{ author.first_name }} {{ author.last_name }}</span></h1>
+{% endblock %}
+{% block BLOG_CONTENT %}
+    <div class="blog-posts">
+        <ul>
+        {% for post in posts %}
+            <li>
+                {% show_post_summary post %}
+            </li>
+        {% empty %}
+            <li>No posts</li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
