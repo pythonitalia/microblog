@@ -5,13 +5,15 @@
   <p>{{ category.description }}</p> 
 {% endblock %}
 {% block BLOG_CONTENT %}
-  <ul>
-    {% for post in category.post_set.all %}
-      <li>
-        {% show_post_summary post %}
-      </li>
-    {% empty %}
-        <li>No posts</li>
-    {% endfor %}
-  </ul>
+    <div class="blog-posts">
+        <ul>
+        {% for post in category.post_set.all %}
+            <li>
+                {% show_post_summary post %}
+            </li>
+        {% empty %}
+            <li>No posts</li>
+        {% endfor %}
+        </ul>
+    </div>
 {% endblock %}

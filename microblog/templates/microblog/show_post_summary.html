@@ -12,7 +12,7 @@ Template utilizzato dal tag show_post_summary
     </h2>
     <div class="summary">{{ content|prepare_summary|safe }}</div>
     <p class="metadata">
-        <b>{{ post.author.first_name }}</b>
+        <span class="blog-author-name">{{ post.author.first_name }} {{ post.author.last_name }}</span>
         {{ post.date|timesince }} |
         <a title="Commenti articolo" href="{{ content.get_absolute_url }}#last-comment">
             Commenti ({% show_post_comment_count content %})
