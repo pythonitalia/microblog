@@ -78,6 +78,20 @@ def author(request, author):
         },
         context_instance = RequestContext(request)
     )
+
+def post_list(request):
+    if request.user.is_anonymous():
+        posts = models.Post.objects.published()
+    else:
+        posts = models.Post.objects.all()
+
+    return render_to_response(
+        'microblog/post_list.html',
+        {
+            'object_list': posts
+        },
+        context_instance = RequestContext(request)
+    )
     
 def _post_detail(request, content):
     return render_to_response(

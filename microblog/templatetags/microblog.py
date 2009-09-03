@@ -328,3 +328,4 @@ def user_name_for_url(user):
     """
     """
     return slugify('%s-%s' % (user.first_name, user.last_name))
+

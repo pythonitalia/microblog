@@ -5,10 +5,7 @@ from microblog import views, models, feeds, settings
 urlpatterns = patterns('',
     url(
         r'^$',
-        'django.views.generic.list_detail.object_list',
-        {
-            'queryset': models.Post.objects.all()
-        },
+        'microblog.views.post_list',
         name = 'microblog-full-list'
     ),
     url(
