@@ -1,11 +1,14 @@
 # -*- coding: UTF-8 -*-
-from django.db import models
-import settings
+from django.conf import settings as dsettings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.db import models
+
 from django_urls import UrlMixin
 import tagging
 import tagging.fields
+
+import settings
 
 class Category(models.Model):
     name = models.CharField(max_length = 100)
@@ -61,7 +64,7 @@ class Post(models.Model):
 
         try:
             c = contents[settings.MICROBLOG_DEFAULT_LANGUAGE]
-            c = contents[settings.LANGUAGES[0][0]]
+            c = contents[dsettings.LANGUAGES[0][0]]
         except KeyError:
             c = contents.values()[0]
         return c
