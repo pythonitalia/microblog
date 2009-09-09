@@ -11,6 +11,7 @@ from django.template.defaultfilters import slugify
 from django.template.loader import render_to_string
 
 from microblog import models, settings
+from tagging.models import Tag
 
 register = template.Library()
 
@@ -98,6 +99,27 @@ def author_list(parser, token):
         raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
     var_name = contents[-1]
     return Authors(var_name)
+
+@register.tag
+def tags_list(parser, token):
+    """
+    {% tags_list as var_name %}
+    """
+    class Tags(template.Node):
+        def __init__(self, var_name):
+            self.var_name = var_name
+
+        def render(self, context):
+            tags = Tag.objects.usage_for_queryset(models.Post.objects.published(), counts = True)
+            context[self.var_name] = tags
+            return ''
+
+    contents = token.split_contents()
+    tag_name = contents.pop(0)
+    if contents[-2] != 'as':
+        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+    var_name = contents[-1]
+    return Tags(var_name)
 
 def _show_post_summary(context, post):
     if context['user'].is_anonymous() and not post.is_published():
