@@ -16,7 +16,13 @@
         <span>Pubblicato da</span> <b>{{ post.author.first_name }}</b> il {{ post.date|date:"d F Y" }}
     </p>
     {% show_social_networks content %}
-    <a name="comments"></a>
-    {% show_post_comments content %}
+    {% show_post_comments content.post %}
+    {% if post.allow_comments %}
+        {% load comments %}
+        <div class="comments-form">
+            <h3>Aggiungi un commento</h3>
+            {% render_comment_form for post%}
+        </div>
+    {% endif %}
 </div>
 {% endif %}

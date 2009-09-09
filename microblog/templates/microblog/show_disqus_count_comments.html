@@ -1,8 +1,0 @@
-<script type="text/javascript">
-    $(function() {
-        var url = '{{ content.get_url }}/comment_count';
-        $.getJSON(url, function(data) {
-            $('#{{ random_id }}').text(data)
-        });
-    });
-</script><span id="{{ random_id }}"></span>

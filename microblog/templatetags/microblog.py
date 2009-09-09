@@ -6,6 +6,8 @@ from random import randint
 from django import template
 from django.db.models import Count
 from django.conf import settings as dsettings
+from django.contrib import comments
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.template.defaultfilters import slugify
 from django.template.loader import render_to_string
@@ -162,93 +164,6 @@ def show_post_detail(context, content, options=None):
     })
     return context
 
-class DjangoComments(template.Node):
-    def __init__(self, content):
-        self.content = template.Variable(content)
-
-    def render(self, context):
-        content = self.content.resolve(context)
-        return render_to_string(
-            'microblog/show_django_comments.html',
-            {
-                'content': content,
-                'post': content.post,
-            }
-        )
-
-class DisqusComments(template.Node):
-    def __init__(self, content):
-        self.content = template.Variable(content)
-
-    def render(self, context):
-        content = self.content.resolve(context)
-        return render_to_string(
-            'microblog/show_disqus_comments.html',
-            {
-                'content': content,
-                'post': content.post,
-                'embed': settings.MICROBLOG_COMMENT_DISQUS_EMBED,
-                'debug': dsettings.DEBUG,
-            }
-        )
-
-@register.tag
-def show_post_comments(parser, token):
-    contents = token.split_contents()
-    tag_name = contents.pop(0)
-    content  = contents.pop(0)
-    if contents:
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
-    if settings.MICROBLOG_COMMENT == 'comment':
-        comment = DjangoComments(content)
-    else:
-        comment = DisqusComments(content)
-    return comment
-
-class DjangoCountComments(template.Node):
-    def __init__(self, content):
-        self.content = template.Variable(content)
-
-    def render(self, context):
-        content = self.content.resolve(context)
-        return render_to_string(
-            'microblog/show_django_count_comments.html',
-            {
-                'content': content,
-                'post': content.post,
-            }
-        ).strip()
-
-class DisqusCountComments(template.Node):
-    def __init__(self, content):
-        self.content = template.Variable(content)
-
-    def render(self, context):
-        content = self.content.resolve(context)
-        return render_to_string(
-            'microblog/show_disqus_count_comments.html',
-            {
-                'content': content,
-                'post': content.post,
-                'forum_key': settings.MICROBLOG_COMMENT_DISQUS_FORUM_KEY,
-                'random_id': 'i%s' % (randint(0, 100000), ),
-            }
-        ).strip()
-
-@register.tag
-def show_post_comment_count(parser, token):
-    contents = token.split_contents()
-    tag_name = contents[0]
-    try:
-        content = contents[1]
-    except IndexError:
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
-    if settings.MICROBLOG_COMMENT == 'comment':
-        counter = DjangoCountComments(content)
-    else:
-        counter = DisqusCountComments(content)
-    return counter
-
 @register.inclusion_tag('microblog/show_social_networks.html', takes_context=True)
 def show_social_networks(context, content):
     request = context['request']
@@ -351,3 +266,64 @@ def user_name_for_url(user):
     """
     return slugify('%s-%s' % (user.first_name, user.last_name))
 
+@register.tag
+def get_post_comment_count(parser, token):
+    """
+    {% get_post_comment_count post as var_name %}
+    """
+    class CommentsCount(template.Node):
+        def __init__(self, object, var_name):
+            self.object = template.Variable(object)
+            self.var_name = var_name
+            self.comment_model = comments.get_model()
+
+        def render(self, context):
+            o = self.object.resolve(context)
+            ctype = ContentType.objects.get_for_model(o)
+            qs = self.comment_model.objects.filter(
+                content_type = ctype,
+                object_pk = o.id,
+            ).count()
+            context[self.var_name] = qs
+            return ''
+
+    contents = token.split_contents()
+    try:
+        tag_name, arg, _, var_name = contents
+    except ValueError:
+        raise template.TemplateSyntaxError("%r tag had invalid arguments" % contents[0])
+    return CommentsCount(arg, var_name)
+
+@register.tag
+def get_post_comment(parser, token):
+    """
+    {% get_post_comment post as var_name %}
+    """
+    class Comments(template.Node):
+        def __init__(self, object, var_name):
+            self.object = template.Variable(object)
+            self.var_name = var_name
+            self.comment_model = comments.get_model()
+
+        def render(self, context):
+            o = self.object.resolve(context)
+            ctype = ContentType.objects.get_for_model(o)
+            qs = self.comment_model.objects.filter(
+                content_type = ctype,
+                object_pk = o.id,
+            )
+            context[self.var_name] = qs
+            return ''
+
+    contents = token.split_contents()
+    try:
+        tag_name, arg, _, var_name = contents
+    except ValueError:
+        raise template.TemplateSyntaxError("%r tag had invalid arguments" % contents[0])
+    return Comments(arg, var_name)
+
+@register.inclusion_tag('microblog/show_post_comments.html', takes_context = True)
+def show_post_comments(context, post):
+    return {
+        'post': post
+    }

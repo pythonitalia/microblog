@@ -30,11 +30,6 @@ urlpatterns = patterns('',
     ),
 )
 
-if settings.MICROBLOG_COMMENT == 'comment':
-    urlpatterns += patterns('',
-        (r'^comments/', include('django.contrib.comments.urls')),
-    )
-
 if settings.MICROBLOG_PINGBACK_SERVER:
     urlpatterns += patterns('',
         (r'^xmlrpc/$', 'django_xmlrpc.views.handle_xmlrpc', {}, 'xmlrpc'),
