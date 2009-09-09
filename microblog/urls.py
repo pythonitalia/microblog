@@ -29,6 +29,17 @@ urlpatterns = patterns('',
         name = 'microblog-author',
     ),
 )
+
+if settings.MICROBLOG_COMMENT == 'comment':
+    urlpatterns += patterns('',
+        (r'^comments/', include('django.contrib.comments.urls')),
+    )
+
+if settings.MICROBLOG_PINGBACK_SERVER:
+    urlpatterns += patterns('',
+        (r'^xmlrpc/$', 'django_xmlrpc.views.handle_xmlrpc', {}, 'xmlrpc'),
+    )
+
 if settings.MICROBLOG_URL_STYLE == 'date':
     urlpatterns += patterns('',
         url(
@@ -64,14 +75,4 @@ elif settings.MICROBLOG_URL_STYLE == 'category':
             'microblog.views.comment_count',
             name = 'microblog-post-comment-count'
         ),
-    )
-
-if settings.MICROBLOG_COMMENT == 'comment':
-    urlpatterns += patterns('',
-        (r'^comments/', include('django.contrib.comments.urls')),
-    )
-
-if settings.MICROBLOG_PINGBACK_SERVER:
-    urlpatterns += patterns('',
-        (r'^xmlrpc/$', 'django_xmlrpc.views.handle_xmlrpc', {}, 'xmlrpc'),
     )
