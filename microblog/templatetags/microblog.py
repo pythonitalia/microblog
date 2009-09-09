@@ -88,7 +88,7 @@ def author_list(parser, token):
             self.var_name = var_name
 
         def render(self, context):
-            authors = set([ p.author for p in  models.Post.objects.all() ])
+            authors = set([ p.author for p in  models.Post.objects.published() ])
             context[self.var_name] = authors
             return ''
 
