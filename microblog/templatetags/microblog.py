@@ -193,7 +193,7 @@ class DjangoCountComments(template.Node):
             'microblog/show_django_count_comments.html',
             {
                 'content': content,
-                'post': post,
+                'post': content.post,
             }
         ).strip()
 
