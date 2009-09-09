@@ -7,7 +7,7 @@
 {% block BLOG_CONTENT %}
     <div class="blog-posts">
         <ul>
-        {% for post in category.post_set.all %}
+        {% for post in posts %}
             <li>
                 {% show_post_summary post %}
             </li>

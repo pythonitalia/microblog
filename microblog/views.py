@@ -44,6 +44,7 @@ def category(request, category):
         'microblog/category.html',
         {
             'category': category,
+            'posts': category.post_set.all(),
         },
         context_instance = RequestContext(request)
     )
