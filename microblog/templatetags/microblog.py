@@ -251,7 +251,7 @@ def prepare_summary(postcontent):
     if not postcontent.body:
         return postcontent.summary
     summary = postcontent.summary
-    link = '<span class="continue"> <a href="%s">[Continua]</a></span>' % postcontent.get_absolute_url()
+    link = '<span class="continue"> <a href="%s">Continua &rarr;</a></span>' % postcontent.get_absolute_url()
     match = last_close.search(summary)
     if match:
         match = match.group(1)
