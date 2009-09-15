@@ -24,12 +24,26 @@ class PostModeration(CommentModerator):
             )
             try:
                 if aks.verify_key():
+                    m = request.META
                     data = {
-                        'user_ip': request.META['REMOTE_ADDR'],
-                        'user_agent': request.META['HTTP_USER_AGENT'],
-                        'referrer': request.META['HTTP_REFERER'],
+                        'user_ip': m['REMOTE_ADDR'],
+                        'user_agent': m.get('HTTP_USER_AGENT', ''),
+                        'referrer': m.get('HTTP_REFERER', ''),
+                        'comment_type': 'comment',
+                        'comment_author': '',
+                        'comment_author_email': '',
+                        'comment_author_url': '',
+                        'HTTP_ACCEPT': '',
+                        'permalink': '',
+                        'SERVER_NAME': '',
+                        'SERVER_SOFTWARE': '',
+                        'SERVER_ADMIN': '',
+                        'SERVER_ADDR': '',
+                        'SERVER_SIGNATURE': '',
+                        'SERVER_PORT': '',
                     }
                     r = aks.comment_check(comment.comment.encode('utf-8'), data, build_data = False)
+                    print 'x', r, data
                 elif dsettings.DEBUG:
                     raise ValueError('Akismet: invalid key')
             except:
