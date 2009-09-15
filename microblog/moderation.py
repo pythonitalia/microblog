@@ -30,20 +30,19 @@ class PostModeration(CommentModerator):
                         'user_agent': m.get('HTTP_USER_AGENT', ''),
                         'referrer': m.get('HTTP_REFERER', ''),
                         'comment_type': 'comment',
-                        'comment_author': '',
-                        'comment_author_email': '',
-                        'comment_author_url': '',
-                        'HTTP_ACCEPT': '',
+                        'comment_author': comment.user_name,
+                        'comment_author_email': comment.user_email,
+                        'comment_author_url': comment.user_url,
+                        'HTTP_ACCEPT': m.get('HTTP_ACCEPT', ''),
                         'permalink': '',
-                        'SERVER_NAME': '',
-                        'SERVER_SOFTWARE': '',
-                        'SERVER_ADMIN': '',
-                        'SERVER_ADDR': '',
-                        'SERVER_SIGNATURE': '',
-                        'SERVER_PORT': '',
+                        'SERVER_NAME': m.get('SERVER_NAME', ''),
+                        'SERVER_SOFTWARE': m.get('SERVER_SOFTWARE', ''),
+                        'SERVER_ADMIN': m.get('SERVER_ADMIN', ''),
+                        'SERVER_ADDR': m.get('SERVER_ADDR', ''),
+                        'SERVER_SIGNATURE': m.get('SERVER_SIGNATURE', ''),
+                        'SERVER_PORT': m.get('SERVER_PORT', ''),
                     }
                     r = aks.comment_check(comment.comment.encode('utf-8'), data, build_data = False)
-                    print 'x', r, data
                 elif dsettings.DEBUG:
                     raise ValueError('Akismet: invalid key')
             except:
