@@ -23,7 +23,7 @@ class PostManager(models.Manager):
     def published(self):
         return self.all().filter(status = 'P').order_by('-date')
 
-class Post(models.Model):
+class Post(models.Model, UrlMixin):
     date = models.DateTimeField(db_index=True)
     author = models.ForeignKey(User)
     status = models.CharField(max_length = 1, default = 'P', choices = POST_STATUS)
@@ -73,6 +73,18 @@ class Post(models.Model):
         date = self.date
         content = self.postcontent_set.all()[0]
         return content.get_url() + '/trackback'
+
+    def get_absolute_url(self):
+        """
+        Non ha molto senso ritornare la url di un Post dato che l'utente
+        visualizza i PostContent; ma è molto comodo (per il programmatore)
+        avere avere una url che identifica un post senza dover per forza
+        passare da una traduzione.
+        """
+        content = self.content(settings.MICROBLOG_DEFAULT_LANGUAGE)
+        return content.get_absolute_url()
+
+    get_url_path = get_absolute_url
 
 class PostContentManager(models.Manager):
     def getBySlugAndDate(self, slug, year, month, day):
