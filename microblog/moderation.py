@@ -51,4 +51,5 @@ class PostModeration(CommentModerator):
                 pass
         return r
 
-moderator.register(Post, PostModeration)
+if settings.MICROBLOG_ENABLE_MODERATION:
+    moderator.register(Post, PostModeration)
