@@ -12,7 +12,7 @@ except ImportError:
     akismet = None
 
 class PostModeration(CommentModerator):
-    #email_notification = True
+    email_notification = True
     enable_field = 'allow_comments'
     auto_moderate_field = 'date'
     moderate_after = 30
