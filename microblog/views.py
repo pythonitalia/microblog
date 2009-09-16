@@ -10,7 +10,10 @@ from django.template import RequestContext
 from django.template.defaultfilters import slugify
 from django.shortcuts import render_to_response, get_object_or_404
 
-import simplejson
+try:
+    import json as simplejson
+except ImportError:
+    import simplejson
 from decorator import decorator
 
 def json(f):
