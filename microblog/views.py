@@ -43,11 +43,15 @@ def json(f):
 
 def category(request, category):
     category = get_object_or_404(models.Category, name = category)
+    if request.user.is_anonymous():
+        posts = category.post_set.published()
+    else:
+        posts = category.post_set.all()
     return render_to_response(
         'microblog/category.html',
         {
             'category': category,
-            'posts': category.post_set.all(),
+            'posts': posts,
         },
         context_instance = RequestContext(request)
     )
@@ -73,7 +77,10 @@ def author(request, author):
         raise Http404()
     else:
         user = user[0]
-    posts = models.Post.objects.filter(author = user)
+    if request.user.is_anonymous():
+        posts = models.Post.objects.published().filter(author = user)
+    else:
+        posts = models.Post.objects.filter(author = user)
     return render_to_response(
         'microblog/author.html',
         {

@@ -61,7 +61,10 @@ def category_list(parser, token):
             self.include_empty = bool(include_empty)
             self.var_name = var_name
         def render(self, context):
-            c = models.Category.objects.all().order_by('name')
+            if context['user'].is_anonymous():
+                c = models.Category.objects.filter(post__status = 'P').order_by('name')
+            else:
+                c = models.Category.objects.all()
             if not self.include_empty:
                 c = c.annotate(count = Count('post')).filter(count__gt = 0)
             context[self.var_name] = c
@@ -138,7 +141,7 @@ def _show_post_summary(context, post):
                 content = c
                 break
         else:
-            raise ValueError('There is no a valid content (in any language)')
+            content = None
     context.update({
         'post': post,
         'content': content,
