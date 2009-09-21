@@ -175,38 +175,51 @@ def _comment_count(request, content):
         else:
             return page['message']['num_comments']
 
+def _post404(f):
+    def wrapper(*args, **kw):
+        try:
+            return f(*args, **kw)
+        except models.PostContent.DoesNotExist:
+            raise Http404()
+    return wrapper
+
 if settings.MICROBLOG_URL_STYLE == 'date':
+    @_post404
     def post_detail(request, year, month, day, slug):
         return _post_detail(
             request,
             content = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
         )
 
+    @_post404
     def trackback_ping(request, year, month, day, slug):
         return _trackback_ping(
             request,
             content = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
         )
 
+    @_post404
     def comment_count(request, year, month, day, slug):
         return _comment_count(
             request,
             content = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
         )
 elif settings.MICROBLOG_URL_STYLE == 'category':
+    @_post404
     def post_detail(request, category, slug):
         return _post_detail(
             request,
             content = models.PostContent.objects.getBySlugAndCategory(slug, category)
         )
 
+    @_post404
     def trackback_ping(request, category, slug):
         return _trackback_ping(
             request,
             content = models.PostContent.objects.getBySlugAndCategory(slug, category)
         )
 
-    @json
+    @_post404
     def comment_count(request, category, slug):
         return _comment_count(
             request,
