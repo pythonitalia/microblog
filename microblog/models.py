@@ -21,7 +21,7 @@ POST_STATUS = (('P', 'Pubblicato'), ('D', 'Bozza'))
 
 class PostManager(models.Manager):
     def published(self):
-        return self.all().filter(status = 'P').order_by('-date')
+        return self.filter(status = 'P').order_by('-date')
 
 class Post(models.Model, UrlMixin):
     date = models.DateTimeField(db_index=True)
@@ -100,6 +100,14 @@ class PostContentManager(models.Manager):
             slug = slug,
             post__category__name = category,
         )
+
+    def published(self, language = None):
+        q = self\
+            .filter(post__status = 'P')\
+            .order_by('-post__date')
+        if language:
+            q = q.filter(language = language)
+        return q
 
 class PostContent(models.Model, UrlMixin):
     post = models.ForeignKey(Post)
