@@ -11,6 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.template.defaultfilters import slugify
 from django.template.loader import render_to_string
+from django.utils.translation import ugettext
 
 from microblog import models, settings
 from tagging.models import Tag
@@ -254,7 +255,8 @@ def prepare_summary(postcontent):
     if not postcontent.body:
         return postcontent.summary
     summary = postcontent.summary
-    link = '<span class="continue"> <a href="%s">Continua &rarr;</a></span>' % postcontent.get_absolute_url()
+    continue_string = ugettext("Continua")
+    link = '<span class="continue"> <a href="%s">%s &rarr;</a></span>' % (postcontent.get_absolute_url(), continue_string)
     match = last_close.search(summary)
     if match:
         match = match.group(1)
