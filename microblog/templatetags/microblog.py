@@ -24,11 +24,11 @@ class LastBlogPost(template.Node):
         self.limit = limit
 
     def render(self, context):
-        query = models.Post.objects.published()
-        if self.limit:
-            query = query[:self.limit]
         lang = context.get('LANGUAGE_CODE', settings.MICROBLOG_DEFAULT_LANGUAGE)
-        posts = [ (p, p.content(lang)) for p in query ]
+        contents = models.PostContent.objects.published(language = lang).select_related()
+        if self.limit:
+            contents = contents[:self.limit]
+        posts = [ (c.post, c) for c in contents ]
         context[self.var_name] = posts
         return ''
         
