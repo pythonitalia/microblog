@@ -44,9 +44,9 @@ def json(f):
 def category(request, category):
     category = get_object_or_404(models.Category, name = category)
     if request.user.is_anonymous():
-        posts = category.post_set.published()
+        posts = category.post_set.published(lang = request.LANGUAGE_CODE)
     else:
-        posts = category.post_set.all()
+        posts = category.post_set.all(lang = request.LANGUAGE_CODE)
     return render_to_response(
         'microblog/category.html',
         {
@@ -59,6 +59,7 @@ def category(request, category):
 def tag(request, tag):
     tag = get_object_or_404(taggingModels.Tag, name = tag)
     posts = taggingModels.TaggedItem.objects.get_by_model(models.Post, tag)
+    posts = models.Post.objects.published(q = posts, lang = request.LANGUAGE_CODE)
     return render_to_response(
         'microblog/tag.html',
         {
@@ -78,9 +79,12 @@ def author(request, author):
     else:
         user = user[0]
     if request.user.is_anonymous():
-        posts = models.Post.objects.published().filter(author = user)
+        posts = models.Post.objects\
+            .published(lang = request.LANGUAGE_CODE)
     else:
-        posts = models.Post.objects.filter(author = user)
+        posts = models.Post.objects\
+            .all()
+    posts = posts.filter(author = user)
     return render_to_response(
         'microblog/author.html',
         {
@@ -92,9 +96,9 @@ def author(request, author):
 
 def post_list(request):
     if request.user.is_anonymous():
-        posts = models.Post.objects.published()
+        posts = models.Post.objects.published(lang = request.LANGUAGE_CODE)
     else:
-        posts = models.Post.objects.all()
+        posts = models.Post.objects.all(lang = request.LANGUAGE_CODE)
 
     return render_to_response(
         'microblog/post_list.html',

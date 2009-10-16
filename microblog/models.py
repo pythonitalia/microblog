@@ -20,8 +20,28 @@ class Category(models.Model):
 POST_STATUS = (('P', 'Pubblicato'), ('D', 'Bozza'))
 
 class PostManager(models.Manager):
-    def published(self):
-        return self.filter(status = 'P').order_by('-date')
+    def all(self, lang = None):
+        q = super(PostManager, self).all()
+        if lang:
+            q = self.filterPostsByLanguage(q, lang)
+        return q
+
+    def published(self, lang = None, q = None):
+        if q is None:
+            q = self\
+                .filter(status = 'P')\
+                .order_by('-date')
+        else:
+            q = q.filter(status = 'P')
+        if lang:
+            q = self.filterPostsByLanguage(q, lang)
+        return q
+
+    def filterPostsByLanguage(self, query, lang):
+        sql = '"microblog_postcontent"."headline" != \'\''
+        return query\
+            .filter(postcontent__language = lang)\
+            .extra(where = [sql])
 
 class Post(models.Model, UrlMixin):
     date = models.DateTimeField(db_index=True)

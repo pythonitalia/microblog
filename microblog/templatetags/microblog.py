@@ -62,12 +62,26 @@ def category_list(parser, token):
             self.include_empty = bool(include_empty)
             self.var_name = var_name
         def render(self, context):
+            c = models.Category.objects\
+                .all()\
+                .order_by('name')
             if context['user'].is_anonymous():
-                c = models.Category.objects.filter(post__status = 'P').order_by('name')
-            else:
-                c = models.Category.objects.all()
+                # se l'utente non è registrato mostro solo i post pubblicabili,
+                # quelli, cioè, che non sono in draft e hanno una traduzione
+                # nella lingua corrente.
+
+                # purtroppo non riesco ad esprimere con una sola query
+                # (modificando c) il filtro sui post pubblicabili senza
+                # ripetere qui il codice presente nel PostManager.
+                # Al momento ho optato per una doppia query, se le prestazioni
+                # dovessero risentirne possiamo utilizzare uan cache o fare un
+                # po' di refactorin.
+                posts = models.Post.objects.published(lang = context['LANGUAGE_CODE'])
+                c = models.Category.objects.filter(post__in = list(posts))
+
+            c = c.annotate(count = Count('post'))
             if not self.include_empty:
-                c = c.annotate(count = Count('post')).filter(count__gt = 0)
+                c = c.filter(count__gt = 0)
             context[self.var_name] = c
             return ''
 
@@ -116,7 +130,10 @@ def tags_list(parser, token):
             self.var_name = var_name
 
         def render(self, context):
-            tags = Tag.objects.usage_for_queryset(models.Post.objects.published(), counts = True)
+            # 2009-10-16: questo per funzionare ha bisogno di una patch a tagging
+            tags = Tag.objects.usage_for_queryset(
+                models.Post.objects.published(lang = context['LANGUAGE_CODE']),
+                counts = True)
             context[self.var_name] = tags
             return ''
 
@@ -332,3 +349,12 @@ def show_post_comments(context, post):
     return {
         'post': post
     }
+
+@register.filter
+def post_published(q, lang):
+    """
+    Filtra i post passati lasciando solo quelli pubblicabili.
+    """
+    # TODO: al momento q può essere solo un queryset, bisognerebbe prevedere il
+    # caso in cui q sia un iterable di post
+    return models.Post.objects.published(q = q, lang = lang)
