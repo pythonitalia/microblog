@@ -40,3 +40,27 @@ MICROBLOG_DESCRIPTION = getattr(settings, 'MICROBLOG_DESCRIPTION', '')
 
 MICROBLOG_ENABLE_MODERATION = getattr(settings, 'MICROBLOG_ENABLE_MODERATION', True)
 MICROBLOG_AKISMET_KEY = getattr(settings, 'MICROBLOG_AKISMET_KEY')
+
+
+# Microblog twitter integration configuration
+
+# Enable the twitter integration (True or False)
+MICROBLOG_TWITTER_INTEGRATION = getattr(settings, 'MICROBLOG_TWITTER_INTEGRATION', False)
+
+# String containing the twitter account username
+MICROBLOG_TWITTER_USERNAME = getattr(settings, 'MICROBLOG_TWITTER_USERNAME', None)
+
+# String containing the twitter account password
+MICROBLOG_TWITTER_PASSWORD = getattr(settings, 'MICROBLOG_TWITTER_PASSWORD', None)
+
+# String containing the template (django template language) of the message for new blogposts
+# You can use {{ title }} and {{ url }} tags
+MICROBLOG_TWITTER_MESSAGE_TEMPLATE_NEW_POST = getattr(settings, 'MICROBLOG_TWITTER_MESSAGE_TEMPLATE_NEW_POST', 'New blogpost: {{title}} ( {{ url }} )')
+
+# String containing the template (django template language) of the message for updated blogposts
+# You can use {{ title }} and {{ url }} tags
+MICROBLOG_TWITTER_MESSAGE_TEMPLATE_UPDATED_POST = getattr(settings, 'MICROBLOG_TWITTER_MESSAGE_TEMPLATE_UPDATED_POST', 'Updated blogpost: {{title}} ( {{ url }} )')
+
+# String containin the language code
+# eg. "en" or "it"
+MICROBLOG_TWITTER_POST_LANGUAGE = getattr(settings, 'MICROBLOG_TWITTER_POST_LANGUAGE', MICROBLOG_DEFAULT_LANGUAGE)

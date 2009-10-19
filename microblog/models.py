@@ -3,10 +3,14 @@ from django.conf import settings as dsettings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.db import models
+from django.db.models.signals import post_save
+from django.template import Template, Context
 
 from django_urls import UrlMixin
 import tagging
 import tagging.fields
+
+import twitter
 
 import settings
 
@@ -179,3 +183,26 @@ class Trackback(models.Model):
     class Meta:
         ordering = ['-date']
 
+if settings.MICROBLOG_TWITTER_INTEGRATION:
+    _twitter_templates = {
+        True: Template(settings.MICROBLOG_TWITTER_MESSAGE_TEMPLATE_NEW_POST),
+        False: Template(settings.MICROBLOG_TWITTER_MESSAGE_TEMPLATE_UPDATED_POST),
+    }
+    def post_update_on_twitter(sender, instance, created, **kwargs):
+        if instance.language != settings.MICROBLOG_TWITTER_POST_LANGUAGE:
+            return
+        post = instance.post
+        if not post.is_published():
+            return
+        context = Context({
+            "title": instance.headline,
+            "url": instance.get_url(),
+        })
+        status = _twitter_templates[created].render(context)
+        try:
+            api = twitter.Api(settings.MICROBLOG_TWITTER_USERNAME, settings.MICROBLOG_TWITTER_PASSWORD)
+            api.PostUpdate(status)
+        except:
+            pass
+
+    post_save.connect(post_update_on_twitter, sender=PostContent)
