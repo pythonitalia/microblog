@@ -39,7 +39,7 @@ MICROBLOG_TITLE = getattr(settings, 'MICROBLOG_TITLE', 'My Microblog')
 MICROBLOG_DESCRIPTION = getattr(settings, 'MICROBLOG_DESCRIPTION', '')
 
 MICROBLOG_ENABLE_MODERATION = getattr(settings, 'MICROBLOG_ENABLE_MODERATION', True)
-MICROBLOG_AKISMET_KEY = getattr(settings, 'MICROBLOG_AKISMET_KEY')
+MICROBLOG_AKISMET_KEY = getattr(settings, 'MICROBLOG_AKISMET_KEY', None)
 
 
 # Microblog twitter integration configuration
