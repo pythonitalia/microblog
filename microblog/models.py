@@ -194,15 +194,20 @@ if settings.MICROBLOG_TWITTER_INTEGRATION:
         post = instance.post
         if not post.is_published():
             return
+        try:
+            url = settings.MICROBLOG_TWITTER_POST_URL_MANGLER(instance)
+        except:
+            return
         context = Context({
-            "title": instance.headline,
-            "url": instance.get_url(),
+            "content": instance,
+            "url": url,
         })
         status = _twitter_templates[created].render(context)
         try:
             api = twitter.Api(settings.MICROBLOG_TWITTER_USERNAME, settings.MICROBLOG_TWITTER_PASSWORD)
             api.PostUpdate(status)
+            status
         except:
-            pass
+            return
 
     post_save.connect(post_update_on_twitter, sender=PostContent)
