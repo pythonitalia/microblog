@@ -10,8 +10,6 @@ from django_urls import UrlMixin
 import tagging
 import tagging.fields
 
-import twitter
-
 import settings
 
 class Category(models.Model):
@@ -184,6 +182,8 @@ class Trackback(models.Model):
         ordering = ['-date']
 
 if settings.MICROBLOG_TWITTER_INTEGRATION:
+    import twitter
+
     _twitter_templates = {
         True: Template(settings.MICROBLOG_TWITTER_MESSAGE_TEMPLATE_NEW_POST),
         False: Template(settings.MICROBLOG_TWITTER_MESSAGE_TEMPLATE_UPDATED_POST),
