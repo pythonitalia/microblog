@@ -184,6 +184,17 @@ class Trackback(models.Model):
 if settings.MICROBLOG_TWITTER_INTEGRATION:
     import twitter
 
+    def truncate_headline(headline, n_char):
+        last = headline[-n_char - 3]
+        headline = headline[:-n_char -3]
+        i = len(headline)
+        while last not in " ,.;:" and i:
+            i -= 1
+            last = headline[i]
+        if i != -1:
+            headline = headline[:i]
+        return headline + "..."
+
     _twitter_templates = {
         True: Template(settings.MICROBLOG_TWITTER_MESSAGE_TEMPLATE_NEW_POST),
         False: Template(settings.MICROBLOG_TWITTER_MESSAGE_TEMPLATE_UPDATED_POST),
@@ -203,10 +214,17 @@ if settings.MICROBLOG_TWITTER_INTEGRATION:
             "url": url,
         })
         status = _twitter_templates[created].render(context)
+        diff_len = len(status) - 140
+        if diff_len > 0:
+            instance.headline = truncate_headline(instance.headline, diff_len)
+            context = Context({
+                "content": instance,
+                "url": url,
+            })
+            status = _twitter_templates[created].render(context)
         try:
             api = twitter.Api(settings.MICROBLOG_TWITTER_USERNAME, settings.MICROBLOG_TWITTER_PASSWORD)
             api.PostUpdate(status)
-            status
         except:
             return
 
