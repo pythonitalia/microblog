@@ -103,7 +103,7 @@ def post_list(request):
     return render_to_response(
         'microblog/post_list.html',
         {
-            'object_list': posts
+            'posts': posts
         },
         context_instance = RequestContext(request)
     )

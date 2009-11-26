@@ -12,15 +12,11 @@
   </form>
 {% endblock %}
 {% block BLOG_CONTENT %}
-    <div class="blog-posts">
-        <ul class="blog-posts">
-        {% for post in object_list %}
-            <li>
-                {% show_post_summary post %}
-            </li>
-        {% empty %}
-            <li>Empty blog</li>
-        {% endfor %}
-        </ul>
-    </div>
+    <ul class="blog-archive">
+    {% for post in posts %}
+        <li>{% show_post_summary post %}</li>
+    {% empty %}
+        <li>Empty blog</li>
+    {% endfor %}
+    </ul>
 {% endblock %}
