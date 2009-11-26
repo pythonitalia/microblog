@@ -1,0 +1,5 @@
+{% extends "microblog/post_list.html" %}
+{% load microblog %}
+{% block BLOG_HEADER %}
+  <h1>{{ posts.count }} posts in {{ year }}</h1>
+{% endblock %}

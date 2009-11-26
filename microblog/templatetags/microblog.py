@@ -53,6 +53,51 @@ def last_blog_post(parser, token):
     return LastBlogPost(limit, var_name)
 
 @register.tag
+def year_list(parser, token):
+    """
+    {% year_list ["include-empty"] as var_name %}
+    """
+    class Years(template.Node):
+        def __init__(self, include_empty, var_name):
+            self.include_empty = bool(include_empty)
+            self.var_name = var_name
+        def render(self, context):
+            # questo funziona solo con sqlite
+            sql = """
+            SELECT strftime('%%%%Y', date) as d, count(*)
+            FROM microblog_post
+            %s
+            GROUP BY strftime('%%%%Y', date)
+            ORDER BY d DESC;
+            """
+            if context['user'].is_anonymous():
+                sql = sql % "WHERE microblog_post.status = 'P'"
+            else:
+                sql = sql % ''
+
+            from django.db import connection, transaction
+            cursor = connection.cursor()
+
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            context[self.var_name] = rows
+            return ''
+
+    contents = token.split_contents()
+    tag_name = contents.pop(0)
+    if len(contents) > 2:
+        if contents.pop(0) != '"include-empty"':
+            raise template.TemplateSyntaxError("%r tag argument should be \"include-empty\"" % tag_name)
+        empty = True
+    else:
+        empty = False
+
+    if contents[-2] != 'as':
+        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+    var_name = contents[-1]
+    return Years(empty, var_name)
+
+@register.tag
 def category_list(parser, token):
     """
     {% category_list ["include-empty"] as var_name %}

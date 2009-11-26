@@ -56,6 +56,21 @@ def category(request, category):
         context_instance = RequestContext(request)
     )
 
+def post_list_by_year(request, year):
+    if request.user.is_anonymous():
+        posts = models.Post.objects.published(lang = request.LANGUAGE_CODE)
+    else:
+        posts = models.Post.objects.all(lang = request.LANGUAGE_CODE)
+    posts = posts.filter(date__year=year)
+    return render_to_response(
+        'microblog/list_by_year.html',
+        {
+            'year': year,
+            'posts': posts,
+        },
+        context_instance = RequestContext(request)
+    )
+
 def tag(request, tag):
     tag = get_object_or_404(taggingModels.Tag, name = tag)
     posts = taggingModels.TaggedItem.objects.get_by_model(models.Post, tag)
