@@ -392,9 +392,10 @@ def get_post_comment(parser, token):
 
 @register.inclusion_tag('microblog/show_post_comments.html', takes_context = True)
 def show_post_comments(context, post):
-    return {
-        'post': post
-    }
+    context.update({
+        'post': post,
+    })
+    return context
 
 @register.filter
 def post_published(q, lang):
