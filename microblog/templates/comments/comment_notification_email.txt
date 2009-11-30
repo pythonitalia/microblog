@@ -1,6 +1,6 @@
-user: {{ comment.user_name }} - {{ comment.user_email }} [{{ comment.user_url }}]
+{% load microblog %}user: {{ comment.user_name }} - {{ comment.user_email }} [{{ comment.user_url }}]
 
-object: {{ content_object }}
+object: {% get_post_content content_object as c %}{{ c.headline }}
 object url: {{ content_object.get_url }}
 
 comment{% if not comment.is_public %} (moderated){% endif %}:
