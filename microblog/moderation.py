@@ -6,21 +6,16 @@ from django.contrib.comments.moderation import CommentModerator, moderator
 from models import Post
 import settings
 
-try:
-    import akismet
-except ImportError:
-    akismet = None
-
 class PostModeration(CommentModerator):
     email_notification = True
     enable_field = 'allow_comments'
     auto_moderate_field = 'date'
     moderate_after = 30
 
-    if akismet:
+    if settings.MICROBLOG_MODERATION_TYPE == 'akismet':
         def moderate(self, comment, content_object, request):
             r = super(PostModeration, self).moderate(comment, content_object, request)
-            if not r and settings.MICROBLOG_AKISMET_KEY:
+            if not r:
                 aks = akismet.Akismet(
                     agent = 'Microblog',
                     key = settings.MICROBLOG_AKISMET_KEY, 
@@ -54,6 +49,10 @@ class PostModeration(CommentModerator):
                         raise
                     pass
             return r
+    elif settings.MICROBLOG_MODERATION_TYPE == 'always':
+        def moderate(self, comment, content_object, request):
+            super(PostModeration, self).moderate(comment, content_object, request)
+            return True
 
-if settings.MICROBLOG_ENABLE_MODERATION:
+if settings.MICROBLOG_MODERATION_TYPE:
     moderator.register(Post, PostModeration)

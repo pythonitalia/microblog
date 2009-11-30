@@ -38,10 +38,30 @@ if MICROBLOG_PINGBACK_SERVER:
 MICROBLOG_TITLE = getattr(settings, 'MICROBLOG_TITLE', 'My Microblog')
 MICROBLOG_DESCRIPTION = getattr(settings, 'MICROBLOG_DESCRIPTION', '')
 
-MICROBLOG_ENABLE_MODERATION = getattr(settings, 'MICROBLOG_ENABLE_MODERATION', True)
+# configure the moderation system:
+# None - moderation disabled
+# light - auto moderate comments after 30 days and sends email 
+# akismet - light + akismet validation
+# always - always moderate
+MICROBLOG_MODERATION_TYPE = getattr(settings, 'MICROBLOG_MODERATION_TYPE', 'light')
 MICROBLOG_AKISMET_KEY = getattr(settings, 'MICROBLOG_AKISMET_KEY', None)
+if MICROBLOG_MODERATION_TYPE == 'akismet' and not MICROBLOG_AKISMET_KEY:
+    raise ImproperlyConfigured('please set your akismet key')
+elif MICROBLOG_AKISMET_KEY:
+    try:
+        import akismet
+    except ImportError:
+        raise ImproperlyConfigured('In order to use the akismet service you need the akismet module')
 
-
+if hasattr(settings, 'MICROBLOG_ENABLE_MODERATION'):
+    print 'warning, MICROBLOG_ENABLE_MODERATION is deprecated, use MICROBLOG_MODERATION_TYPE instead'
+    if settings.MICROBLOG_ENABLE_MODERATION:
+        if settings.MICROBLOG_AKISMET_KEY:
+            MICROBLOG_MODERATION_TYPE = 'akismet'
+        else:
+            MICROBLOG_MODERATION_TYPE = 'light'
+    else:
+        MICROBLOG_MODERATION_TYPE = None
 # Microblog twitter integration configuration
 
 # Enable the twitter integration (True or False)

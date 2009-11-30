@@ -6,9 +6,9 @@ from django.contrib.auth import models as authModels
 
 from django.conf import settings as dsettings
 from django.http import HttpResponse, Http404
+from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
-from django.shortcuts import render_to_response, get_object_or_404
 
 try:
     import json as simplejson
