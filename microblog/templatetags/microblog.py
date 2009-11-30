@@ -318,7 +318,7 @@ def prepare_summary(postcontent):
         return postcontent.summary
     summary = postcontent.summary
     continue_string = ugettext("Continua")
-    link = '<span class="continue"> <a href="%s">%s &rarr;</a></span>' % (postcontent.get_absolute_url(), continue_string)
+    link = '<span class="continue"> <a href="%s">%s&nbsp;&rarr;</a></span>' % (postcontent.get_absolute_url(), continue_string)
     match = last_close.search(summary)
     if match:
         match = match.group(1)
