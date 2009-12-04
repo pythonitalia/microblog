@@ -10,6 +10,8 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
+
 try:
     import json as simplejson
 except ImportError:
@@ -44,9 +46,22 @@ def json(f):
 def category(request, category):
     category = get_object_or_404(models.Category, name = category)
     if request.user.is_anonymous():
-        posts = category.post_set.published(lang = request.LANGUAGE_CODE)
+        post_list = category.post_set.published(lang = request.LANGUAGE_CODE)
     else:
-        posts = category.post_set.all(lang = request.LANGUAGE_CODE)
+        post_list = category.post_set.all(lang = request.LANGUAGE_CODE)
+
+    if settings.MICROBLOG_POST_LIST_PAGINATION:
+        paginator = Paginator(post_list, settings.MICROBLOG_POST_PER_PAGE)
+        try:
+            page = int(request.GET.get("page", "1"))
+        except ValueError:
+            page = 1
+
+        try:
+            posts = paginator.page(page)
+        except (EmptyPage, InvalidPage):
+            posts = paginator.page(1)
+
     return render_to_response(
         'microblog/category.html',
         {
@@ -58,10 +73,23 @@ def category(request, category):
 
 def post_list_by_year(request, year):
     if request.user.is_anonymous():
-        posts = models.Post.objects.published(lang = request.LANGUAGE_CODE)
+        post_list = models.Post.objects.published(lang = request.LANGUAGE_CODE)
     else:
-        posts = models.Post.objects.all(lang = request.LANGUAGE_CODE)
-    posts = posts.filter(date__year=year)
+        post_list = models.Post.objects.all(lang = request.LANGUAGE_CODE)
+    post_list = post_list.filter(date__year=year)
+
+    if settings.MICROBLOG_POST_LIST_PAGINATION:
+        paginator = Paginator(post_list, settings.MICROBLOG_POST_PER_PAGE)
+        try:
+            page = int(request.GET.get("page", "1"))
+        except ValueError:
+            page = 1
+
+        try:
+            posts = paginator.page(page)
+        except (EmptyPage, InvalidPage):
+            posts = paginator.page(1)
+
     return render_to_response(
         'microblog/list_by_year.html',
         {
@@ -111,14 +139,28 @@ def author(request, author):
 
 def post_list(request):
     if request.user.is_anonymous():
-        posts = models.Post.objects.published(lang = request.LANGUAGE_CODE)
+        post_list = models.Post.objects.published(lang = request.LANGUAGE_CODE)
     else:
-        posts = models.Post.objects.all(lang = request.LANGUAGE_CODE)
+        post_list = models.Post.objects.all(lang = request.LANGUAGE_CODE)
+
+    if settings.MICROBLOG_POST_LIST_PAGINATION:
+        paginator = Paginator(post_list, settings.MICROBLOG_POST_PER_PAGE)
+        try:
+            page = int(request.GET.get("page", "1"))
+        except ValueError:
+            page = 1
+
+        try:
+            posts = paginator.page(page)
+        except (EmptyPage, InvalidPage):
+            posts = paginator.page(1)
+    else:
+        posts = post_list
 
     return render_to_response(
         'microblog/post_list.html',
         {
-            'posts': posts
+            'posts': posts,
         },
         context_instance = RequestContext(request)
     )

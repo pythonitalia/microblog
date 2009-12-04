@@ -13,7 +13,7 @@
 {% endblock %}
 {% block BLOG_CONTENT %}
     <ul class="blog-archive">
-    {% for post in posts %}
+    {% for post in posts.object_list %}
         <li>{% show_post_summary post %}</li>
     {% empty %}
         <li>Empty blog</li>

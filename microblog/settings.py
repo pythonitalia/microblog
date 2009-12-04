@@ -87,3 +87,9 @@ MICROBLOG_TWITTER_POST_LANGUAGE = getattr(settings, 'MICROBLOG_TWITTER_POST_LANG
 
 # Callable that mangle the given url
 MICROBLOG_TWITTER_POST_URL_MANGLER = getattr(settings, 'MICROBLOG_TWITTER_POST_URL_MANGLER', lambda p: p.get_url())
+
+# Enable the pagination for posts in the post list pages
+MICROBLOG_POST_LIST_PAGINATION = getattr(settings, 'MICROBLOG_POST_LIST_PAGINATION', False)
+
+# Number of post in a single page
+MICROBLOG_POST_PER_PAGE = getattr(settings, 'MICROBLOG_POST_PER_PAGE', 0)
