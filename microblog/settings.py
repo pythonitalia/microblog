@@ -14,6 +14,8 @@ MICROBLOG_DEFAULT_LANGUAGE = getattr(
 MICROBLOG_URL_STYLE = getattr(settings, 'MICROBLOG_URL_STYLE', 'date')
 assert MICROBLOG_URL_STYLE in ('date', 'category'), "MICROBLOG_URL_STYLE should be either date or category"
 
+MICROBLOG_LANGUAGE_FALLBACK_ON_POST_LIST = getattr(settings, 'MICROBLOG_LANGUAGE_FALLBACK_ON_POST_LIST', False)
+
 # enable/disable the server side support for the trackback protocol
 MICROBLOG_TRACKBACK_SERVER = getattr(settings, 'MICROBLOG_TRACKBACK_SERVER', True)
 

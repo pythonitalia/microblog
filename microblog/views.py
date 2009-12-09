@@ -43,31 +43,9 @@ def json(f):
         return HttpResponse(content = result, content_type = ct, status = status)
     return decorator(wrapper, f)
 
-def _paginate_posts(post_list, request):
-    if settings.MICROBLOG_POST_LIST_PAGINATION:
-        paginator = Paginator(post_list, settings.MICROBLOG_POST_PER_PAGE)
-        try:
-            page = int(request.GET.get("page", "1"))
-        except ValueError:
-            page = 1
-
-        try:
-            posts = paginator.page(page)
-        except (EmptyPage, InvalidPage):
-            posts = paginator.page(1)
-    else:
-        paginator = Paginator(post_list, len(post_list))
-        posts = paginator.page(1)
-
-    return posts
-
 def category(request, category):
     category = get_object_or_404(models.Category, name = category)
-    if request.user.is_anonymous():
-        post_list = category.post_set.published(lang = request.LANGUAGE_CODE)
-    else:
-        post_list = category.post_set.all(lang = request.LANGUAGE_CODE)
-
+    post_list = _posts_list(request).filter(category=category)
     posts = _paginate_posts(post_list, request)
 
     return render_to_response(
@@ -80,12 +58,7 @@ def category(request, category):
     )
 
 def post_list_by_year(request, year):
-    if request.user.is_anonymous():
-        post_list = models.Post.objects.published(lang = request.LANGUAGE_CODE)
-    else:
-        post_list = models.Post.objects.all(lang = request.LANGUAGE_CODE)
-    post_list = post_list.filter(date__year=year)
-
+    post_list = _posts_list(request).filter(date__year=year)
     posts = _paginate_posts(post_list, request)
 
     return render_to_response(
@@ -99,8 +72,9 @@ def post_list_by_year(request, year):
 
 def tag(request, tag):
     tag = get_object_or_404(taggingModels.Tag, name = tag)
-    posts = taggingModels.TaggedItem.objects.get_by_model(models.Post, tag)
-    posts = models.Post.objects.published(q = posts, lang = request.LANGUAGE_CODE)
+    post_list = _posts_list(request)
+    tagged_posts = taggingModels.TaggedItem.objects.get_by_model(post_list, tag)
+    posts = _paginate_posts(tagged_posts, request)
     return render_to_response(
         'microblog/tag.html',
         {
@@ -119,13 +93,8 @@ def author(request, author):
         raise Http404()
     else:
         user = user[0]
-    if request.user.is_anonymous():
-        posts = models.Post.objects\
-            .published(lang = request.LANGUAGE_CODE)
-    else:
-        posts = models.Post.objects\
-            .all()
-    posts = posts.filter(author = user)
+    post_list = _posts_list(request).filter(author = user)
+    posts = _paginate_posts(post_list, request)
     return render_to_response(
         'microblog/author.html',
         {
@@ -136,12 +105,8 @@ def author(request, author):
     )
 
 def post_list(request):
-    if request.user.is_anonymous():
-        post_list = models.Post.objects.published(lang = request.LANGUAGE_CODE)
-    else:
-        post_list = models.Post.objects.all(lang = request.LANGUAGE_CODE)
-
-    posts = _paginate_posts(post_list, request)
+    posts = _posts_list(request)
+    posts = _paginate_posts(posts, request)
 
     return render_to_response(
         'microblog/post_list.html',
@@ -150,7 +115,38 @@ def post_list(request):
         },
         context_instance = RequestContext(request)
     )
-    
+
+def _paginate_posts(post_list, request):
+    if settings.MICROBLOG_POST_LIST_PAGINATION:
+        paginator = Paginator(post_list, settings.MICROBLOG_POST_PER_PAGE)
+        try:
+            page = int(request.GET.get("page", "1"))
+        except ValueError:
+            page = 1
+
+        try:
+            posts = paginator.page(page)
+        except (EmptyPage, InvalidPage):
+            posts = paginator.page(1)
+    else:
+        paginator = Paginator(post_list, len(post_list))
+        posts = paginator.page(1)
+
+    return posts
+
+def _posts_list(request):
+    if settings.MICROBLOG_LANGUAGE_FALLBACK_ON_POST_LIST:
+        lang = None
+    else:
+        lang = request.LANGUAGE_CODE
+
+    if request.user.is_anonymous():
+        post_list = models.Post.objects.published(lang = lang)
+    else:
+        post_list = models.Post.objects.all(lang = lang)
+
+    return post_list
+
 def _post_detail(request, content):
     return render_to_response(
         'microblog/post_detail.html',

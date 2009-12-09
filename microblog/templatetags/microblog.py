@@ -107,9 +107,10 @@ def category_list(parser, token):
             self.include_empty = bool(include_empty)
             self.var_name = var_name
         def render(self, context):
-            c = models.Category.objects\
-                .all()\
-                .order_by('name')
+            if settings.MICROBLOG_LANGUAGE_FALLBACK_ON_POST_LIST:
+                lang = None
+            else:
+                lang = context['LANGUAGE_CODE']
             if context['user'].is_anonymous():
                 # se l'utente non è registrato mostro solo i post pubblicabili,
                 # quelli, cioè, che non sono in draft e hanno una traduzione
@@ -119,12 +120,13 @@ def category_list(parser, token):
                 # (modificando c) il filtro sui post pubblicabili senza
                 # ripetere qui il codice presente nel PostManager.
                 # Al momento ho optato per una doppia query, se le prestazioni
-                # dovessero risentirne possiamo utilizzare uan cache o fare un
-                # po' di refactorin.
-                posts = models.Post.objects.published(lang = context['LANGUAGE_CODE'])
+                # dovessero risentirne possiamo utilizzare una cache o fare un
+                # po' di refactoring.
+                posts = models.Post.objects.published(lang = lang)
                 c = models.Category.objects.filter(post__in = list(posts))
-
-            c = c.annotate(count = Count('post'))
+            else:
+                c = models.Category.objects.all(lang=lang)
+            c = c.order_by('name').annotate(count = Count('post'))
             if not self.include_empty:
                 c = c.filter(count__gt = 0)
             context[self.var_name] = c
@@ -192,19 +194,10 @@ def tags_list(parser, token):
 def _show_post_summary(context, post):
     if context['user'].is_anonymous() and not post.is_published():
         return {}
-    lang = context['LANGUAGE_CODE']
-    contents = dict((c.language, c) for c in post.postcontent_set.all())
     try:
-        content = contents[lang]
-        if not content.headline:
-            raise KeyError()
-    except KeyError:
-        for l, c in contents.items():
-            if c.headline:
-                content = c
-                break
-        else:
-            content = None
+        content = post.content(lang = context['LANGUAGE_CODE'], fallback = True)
+    except models.PostContent.DoesNotExist:
+        content = None
     context.update({
         'post': post,
         'content': content,
