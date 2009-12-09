@@ -25,11 +25,11 @@ class LastBlogPost(template.Node):
 
     def render(self, context):
         lang = context.get('LANGUAGE_CODE', settings.MICROBLOG_DEFAULT_LANGUAGE)
-        contents = models.PostContent.objects.published(language = lang).select_related()
+        posts = models.Post.objects.published().select_related()
         if self.limit:
-            contents = contents[:self.limit]
-        posts = [ (c.post, c) for c in contents ]
-        context[self.var_name] = posts
+            posts = posts[:self.limit]
+        result = [ (p, p.content(lang)) for p in posts ]
+        context[self.var_name] = result
         return ''
         
 @register.tag
