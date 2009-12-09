@@ -234,13 +234,12 @@ def show_post_detail(context, content, options=None):
 def show_social_networks(context, content):
     request = context['request']
     site = Site.objects.get_current()
-    return {
+    context.update({
         'post': content.post,
         'content': content,
         'content_url': 'http://%s%s' % (site.domain, content.get_absolute_url()),
-        'MEDIA_URL': context['MEDIA_URL'],
-        'request': request,
-    }
+    })
+    return context
 
 @register.inclusion_tag('microblog/trackback_rdf.xml')
 def trackback_rdf(content):

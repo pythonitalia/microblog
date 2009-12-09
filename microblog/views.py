@@ -43,13 +43,7 @@ def json(f):
         return HttpResponse(content = result, content_type = ct, status = status)
     return decorator(wrapper, f)
 
-def category(request, category):
-    category = get_object_or_404(models.Category, name = category)
-    if request.user.is_anonymous():
-        post_list = category.post_set.published(lang = request.LANGUAGE_CODE)
-    else:
-        post_list = category.post_set.all(lang = request.LANGUAGE_CODE)
-
+def _paginate_posts(post_list, request):
     if settings.MICROBLOG_POST_LIST_PAGINATION:
         paginator = Paginator(post_list, settings.MICROBLOG_POST_PER_PAGE)
         try:
@@ -61,6 +55,20 @@ def category(request, category):
             posts = paginator.page(page)
         except (EmptyPage, InvalidPage):
             posts = paginator.page(1)
+    else:
+        paginator = Paginator(post_list, len(post_list))
+        posts = paginator.page(1)
+
+    return posts
+    
+def category(request, category):
+    category = get_object_or_404(models.Category, name = category)
+    if request.user.is_anonymous():
+        post_list = category.post_set.published(lang = request.LANGUAGE_CODE)
+    else:
+        post_list = category.post_set.all(lang = request.LANGUAGE_CODE)
+
+    posts = _paginate_posts(post_list, request)
 
     return render_to_response(
         'microblog/category.html',
@@ -78,17 +86,7 @@ def post_list_by_year(request, year):
         post_list = models.Post.objects.all(lang = request.LANGUAGE_CODE)
     post_list = post_list.filter(date__year=year)
 
-    if settings.MICROBLOG_POST_LIST_PAGINATION:
-        paginator = Paginator(post_list, settings.MICROBLOG_POST_PER_PAGE)
-        try:
-            page = int(request.GET.get("page", "1"))
-        except ValueError:
-            page = 1
-
-        try:
-            posts = paginator.page(page)
-        except (EmptyPage, InvalidPage):
-            posts = paginator.page(1)
+    posts = _paginate_posts(post_list, request)
 
     return render_to_response(
         'microblog/list_by_year.html',
@@ -143,19 +141,7 @@ def post_list(request):
     else:
         post_list = models.Post.objects.all(lang = request.LANGUAGE_CODE)
 
-    if settings.MICROBLOG_POST_LIST_PAGINATION:
-        paginator = Paginator(post_list, settings.MICROBLOG_POST_PER_PAGE)
-        try:
-            page = int(request.GET.get("page", "1"))
-        except ValueError:
-            page = 1
-
-        try:
-            posts = paginator.page(page)
-        except (EmptyPage, InvalidPage):
-            posts = paginator.page(1)
-    else:
-        posts = post_list
+    posts = _paginate_posts(post_list, request)
 
     return render_to_response(
         'microblog/post_list.html',
