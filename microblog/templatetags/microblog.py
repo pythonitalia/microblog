@@ -125,7 +125,7 @@ def category_list(parser, token):
                 posts = models.Post.objects.published(lang = lang)
                 c = models.Category.objects.filter(post__in = list(posts))
             else:
-                c = models.Category.objects.all(lang=lang)
+                c = models.Category.objects.all()
             c = c.order_by('name').annotate(count = Count('post'))
             if not self.include_empty:
                 c = c.filter(count__gt = 0)
