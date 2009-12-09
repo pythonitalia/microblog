@@ -60,7 +60,7 @@ def _paginate_posts(post_list, request):
         posts = paginator.page(1)
 
     return posts
-    
+
 def category(request, category):
     category = get_object_or_404(models.Category, name = category)
     if request.user.is_anonymous():
