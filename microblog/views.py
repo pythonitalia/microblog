@@ -46,6 +46,7 @@ def json(f):
 def category(request, category):
     category = get_object_or_404(models.Category, name = category)
     post_list = _posts_list(request).filter(category=category)
+    post_list_count = post_list.count()
     posts = _paginate_posts(post_list, request)
 
     return render_to_response(
@@ -53,12 +54,14 @@ def category(request, category):
         {
             'category': category,
             'posts': posts,
+            'post_count': post_list_count,
         },
         context_instance = RequestContext(request)
     )
 
 def post_list_by_year(request, year):
     post_list = _posts_list(request).filter(date__year=year)
+    post_list_count = post_list.count()
     posts = _paginate_posts(post_list, request)
 
     return render_to_response(
@@ -66,6 +69,7 @@ def post_list_by_year(request, year):
         {
             'year': year,
             'posts': posts,
+            'post_count': post_list_count,
         },
         context_instance = RequestContext(request)
     )
@@ -74,12 +78,14 @@ def tag(request, tag):
     tag = get_object_or_404(taggingModels.Tag, name = tag)
     post_list = _posts_list(request)
     tagged_posts = taggingModels.TaggedItem.objects.get_by_model(post_list, tag)
+    post_list_count = tagged_posts.count()
     posts = _paginate_posts(tagged_posts, request)
     return render_to_response(
         'microblog/tag.html',
         {
             'tag': tag,
             'posts': posts,
+            'post_count': post_list_count,
         },
         context_instance = RequestContext(request)
     )
@@ -94,12 +100,14 @@ def author(request, author):
     else:
         user = user[0]
     post_list = _posts_list(request).filter(author = user)
+    post_list_count = post_list.count()
     posts = _paginate_posts(post_list, request)
     return render_to_response(
         'microblog/author.html',
         {
             'author': user,
             'posts': posts,
+            'post_count': post_list_count,
         },
         context_instance = RequestContext(request)
     )
