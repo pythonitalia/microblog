@@ -94,4 +94,6 @@ MICROBLOG_TWITTER_POST_URL_MANGLER = getattr(settings, 'MICROBLOG_TWITTER_POST_U
 MICROBLOG_POST_LIST_PAGINATION = getattr(settings, 'MICROBLOG_POST_LIST_PAGINATION', False)
 
 # Number of post in a single page
-MICROBLOG_POST_PER_PAGE = getattr(settings, 'MICROBLOG_POST_PER_PAGE', 0)
+MICROBLOG_POST_PER_PAGE = getattr(settings, 'MICROBLOG_POST_PER_PAGE', 20)
+if MICROBLOG_POST_LIST_PAGINATION and MICROBLOG_POST_PER_PAGE < 1:
+    raise ImproperlyConfigured('MICROBLOG_POST_PER_PAGE must be greater than zero')
