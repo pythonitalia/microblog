@@ -137,7 +137,7 @@ def _paginate_posts(post_list, request):
         except (EmptyPage, InvalidPage):
             posts = paginator.page(1)
     else:
-        paginator = Paginator(post_list, len(post_list))
+        paginator = Paginator(post_list, len(post_list) or 1)
         posts = paginator.page(1)
 
     return posts
