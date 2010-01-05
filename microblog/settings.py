@@ -64,6 +64,7 @@ if hasattr(settings, 'MICROBLOG_ENABLE_MODERATION'):
             MICROBLOG_MODERATION_TYPE = 'light'
     else:
         MICROBLOG_MODERATION_TYPE = None
+
 # Microblog twitter integration configuration
 
 # Enable the twitter integration (True or False)
