@@ -24,6 +24,11 @@ urlpatterns = patterns('',
         name = 'microblog-list-by-year',
     ),
     url(
+        r'^years/(?P<year>\d{4})/(?P<month>\d{1,2})/$',
+        'microblog.views.post_list_by_year',
+        name = 'microblog-list-by-month',
+    ),
+    url(
         r'^tags/(?P<tag>.*)$',
         'microblog.views.tag',
         name = 'microblog-tag',

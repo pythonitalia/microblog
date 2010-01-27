@@ -59,8 +59,10 @@ def category(request, category):
         context_instance = RequestContext(request)
     )
 
-def post_list_by_year(request, year):
+def post_list_by_year(request, year, month=None):
     post_list = _posts_list(request).filter(date__year=year)
+    if month is not None:
+        post_list = post_list.filter(date__month=month)
     post_list_count = post_list.count()
     posts = _paginate_posts(post_list, request)
 
@@ -68,6 +70,7 @@ def post_list_by_year(request, year):
         'microblog/list_by_year.html',
         {
             'year': year,
+            'month': month,
             'posts': posts,
             'post_count': post_list_count,
         },

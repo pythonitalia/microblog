@@ -3,6 +3,8 @@ from __future__ import absolute_import
 
 import re
 from random import randint
+from datetime import date
+
 from django import template
 from django.db.models import Count
 from django.conf import settings as dsettings
@@ -79,8 +81,7 @@ def year_list(parser, token):
             cursor = connection.cursor()
 
             cursor.execute(sql)
-            rows = cursor.fetchall()
-            context[self.var_name] = rows
+            context[self.var_name] = cursor.fetchall()
             return ''
 
     contents = token.split_contents()
@@ -96,6 +97,55 @@ def year_list(parser, token):
         raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
     var_name = contents[-1]
     return Years(empty, var_name)
+
+@register.tag
+def month_list(parser, token):
+    """
+    {% year_list ["include-empty"] as var_name %}
+    """
+    class Months(template.Node):
+        def __init__(self, include_empty, var_name):
+            self.include_empty = bool(include_empty)
+            self.var_name = var_name
+        def render(self, context):
+            # questo funziona solo con sqlite
+            sql = """
+            SELECT strftime('%%%%Y/%%%%m', date) as d, count(*)
+            FROM microblog_post
+            %s
+            GROUP BY strftime('%%%%Y/%%%%m', date)
+            ORDER BY d DESC;
+            """
+            if context['user'].is_anonymous():
+                sql = sql % "WHERE microblog_post.status = 'P'"
+            else:
+                sql = sql % ''
+
+            from django.db import connection, transaction
+            cursor = connection.cursor()
+
+            cursor.execute(sql)
+            output = []
+            for row in cursor.fetchall():
+                year, month = map(int, row[0].split('/'))
+                d = date(day=1, month=month, year=year)
+                output.append((d, row[1]))
+            context[self.var_name] = output
+            return ''
+
+    contents = token.split_contents()
+    tag_name = contents.pop(0)
+    if len(contents) > 2:
+        if contents.pop(0) != '"include-empty"':
+            raise template.TemplateSyntaxError("%r tag argument should be \"include-empty\"" % tag_name)
+        empty = True
+    else:
+        empty = False
+
+    if contents[-2] != 'as':
+        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
+    var_name = contents[-1]
+    return Months(empty, var_name)
 
 @register.tag
 def category_list(parser, token):
