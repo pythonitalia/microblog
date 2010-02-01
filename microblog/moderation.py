@@ -16,6 +16,7 @@ class PostModeration(CommentModerator):
         def moderate(self, comment, content_object, request):
             r = super(PostModeration, self).moderate(comment, content_object, request)
             if not r:
+                import akismet
                 aks = akismet.Akismet(
                     agent = 'Microblog',
                     key = settings.MICROBLOG_AKISMET_KEY, 
