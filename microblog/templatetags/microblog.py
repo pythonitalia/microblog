@@ -421,6 +421,7 @@ def get_post_comment(parser, token):
             qs = self.comment_model.objects.filter(
                 content_type = ctype,
                 object_pk = o.id,
+                is_public = True,
             )
             context[self.var_name] = qs
             return ''
