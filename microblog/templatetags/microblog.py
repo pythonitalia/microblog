@@ -11,6 +11,7 @@ from django.conf import settings as dsettings
 from django.contrib import comments
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
+from django.template import Context
 from django.template.defaultfilters import slugify
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext
@@ -19,6 +20,19 @@ from microblog import models, settings
 from tagging.models import Tag
 
 register = template.Library()
+
+from django.template.context import Context
+
+# private_context, based on this recipe: http://djangosnippets.org/snippets/1687/
+def private_context(f):
+    from functools import wraps
+
+    @wraps(f)
+    def private_context_wrapper(context, *args, **kwargs):
+        c = Context(context)
+        return f(c, *args, **kwargs)
+
+    return private_context_wrapper
 
 class LastBlogPost(template.Node):
     def __init__(self, limit, var_name):
@@ -241,6 +255,7 @@ def tags_list(parser, token):
     var_name = contents[-1]
     return Tags(var_name)
 
+@private_context
 def _show_post_summary(context, post):
     if context['user'].is_anonymous() and not post.is_published():
         return {}
@@ -248,6 +263,7 @@ def _show_post_summary(context, post):
         content = post.content(lang = context['LANGUAGE_CODE'], fallback = True)
     except models.PostContent.DoesNotExist:
         content = None
+
     context.update({
         'post': post,
         'content': content,
