@@ -34,6 +34,7 @@ class LatestPosts(Feed):
 
     title = settings.MICROBLOG_TITLE
     description = settings.MICROBLOG_DESCRIPTION
+    description_template = 'microblog/feeds/item_description.html'
 
     def items(self, obj):
         l = self.languages[obj]
