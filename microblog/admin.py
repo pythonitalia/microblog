@@ -70,7 +70,7 @@ class PostAdmin(admin.ModelAdmin):
             if '_' not in name:
                 continue
             l = name.rsplit('_', 1)[1]
-            if len(l) > 3:
+            if l.startswith('comments'):
                 # houch, allow_comments ha l'_
                 continue
             lang_fieldsets[l]['fields'].append(name)
