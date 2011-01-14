@@ -92,13 +92,14 @@ class PostAdmin(admin.ModelAdmin):
         #   body
         for l, _ in settings.LANGUAGES:
             fields = {
-                'headline': forms.CharField(required = False, max_length = 200),
-                'slug': forms.CharField(required = False, max_length = 50),
-                'summary': forms.CharField(required = False, widget = forms.Textarea),
-                'body': forms.CharField(required = False, widget = forms.Textarea),
+                'headline': forms.CharField(required=False, max_length=200),
+                'slug': forms.CharField(required=False, max_length=50),
+                'summary': forms.CharField(required=False, widget=forms.Textarea),
+                'body': forms.CharField(required=False, widget=forms.Textarea),
             }
             for k in 'headline', 'slug', 'summary', 'body':
                 f = fields[k]
+                f.label = '%s (%s)' % (k, l.split('-', 1)[0].upper())
                 if obj:
                     f.initial = getContent(l, k)
                 form.base_fields[k + '_' + l] = f
