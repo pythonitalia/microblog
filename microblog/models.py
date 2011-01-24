@@ -59,7 +59,7 @@ class Post(models.Model, UrlMixin):
     tags = tagging.fields.TagField()
     category = models.ForeignKey(Category)
     featured = models.BooleanField(default=False)
-    image = models.ImageField(upload_to=settings.MICROBLOG_UPLOAD_TO, null=True, blank=True)
+    image = models.URLField(verify_exists=False, null=True, blank=True)
 
     objects = PostManager()
 
