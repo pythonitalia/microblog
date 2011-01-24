@@ -2,7 +2,7 @@
 {% if content %}
 <div class="microblog post-summary{% if post.featured %} featured{% endif %}">
     {% if post.image %}
-    <img src="{{ post.image.url }}" alt="" />
+    <img src="{{ post.image }}" alt="" />
     {% endif %}
     <h2>
         {% if not post.is_published %}
