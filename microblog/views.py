@@ -117,12 +117,10 @@ def author(request, author):
 
 def post_list(request):
     posts = _posts_list(request)
-    posts = _paginate_posts(posts, request)
-
     return render_to_response(
         'microblog/post_list.html',
         {
-            'posts': posts,
+            'posts': _paginate_posts(posts, request),
             'featured': models.Post.objects.featured(),
         },
         context_instance = RequestContext(request)
