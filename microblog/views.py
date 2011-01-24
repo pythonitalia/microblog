@@ -152,11 +152,7 @@ def _posts_list(request, featured=False):
     else:
         lang = request.LANGUAGE_CODE
 
-    if request.user.is_anonymous():
-        post_list = models.Post.objects.published(lang = lang)
-    else:
-        post_list = models.Post.objects.all(lang = lang)
-
+    post_list = models.Post.objects.published(lang=lang, user=request.user)
     return models.Post.objects.filterPostsByFeaturedStatus(post_list, featured=featured)
 
 def _post_detail(request, content):

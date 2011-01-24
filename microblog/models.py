@@ -28,15 +28,15 @@ class PostManager(models.Manager):
             q = self.filterPostsByLanguage(q, lang)
         return q
 
-    def published(self, lang = None, q = None):
+    def published(self, lang=None, q=None, user=None):
         if q is None:
-            q = self\
-                .filter(status = 'P')\
-                .order_by('-date')
-        else:
-            q = q.filter(status = 'P')
+            q = self
         if lang:
             q = self.filterPostsByLanguage(q, lang)
+        if user is None or user.is_anonymous():
+            q = q.filter(status='P')
+        elif not user.is_superuser:
+            q = q.filter(models.Q(author=user) | models.Q(status='P'))
         return q
 
     def filterPostsByLanguage(self, query, lang):
