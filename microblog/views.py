@@ -45,7 +45,7 @@ def json(f):
 
 def category(request, category):
     category = get_object_or_404(models.Category, name = category)
-    post_list = _posts_list(request).filter(category=category)
+    post_list = _posts_list(request, featured=None).filter(category=category)
     post_list_count = post_list.count()
     posts = _paginate_posts(post_list, request)
 
@@ -79,7 +79,7 @@ def post_list_by_year(request, year, month=None):
 
 def tag(request, tag):
     tag = get_object_or_404(taggingModels.Tag, name = tag)
-    post_list = _posts_list(request)
+    post_list = _posts_list(request, featured=None)
     tagged_posts = taggingModels.TaggedItem.objects.get_by_model(post_list, tag)
     post_list_count = tagged_posts.count()
     posts = _paginate_posts(tagged_posts, request)
@@ -153,6 +153,8 @@ def _posts_list(request, featured=False):
         lang = request.LANGUAGE_CODE
 
     post_list = models.Post.objects.published(lang=lang, user=request.user)
+    if featured is None:
+        return post_list
     return models.Post.objects.filterPostsByFeaturedStatus(post_list, featured=featured)
 
 def _post_detail(request, content):
