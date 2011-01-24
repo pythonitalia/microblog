@@ -53,7 +53,7 @@ class PostAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None, **kwargs):
         fieldsets = [
             (None, {
-                'fields': ('date', 'author', 'status', 'tags', 'category', 'allow_comments')
+                'fields': ('date', 'author', 'status', 'tags', 'category', 'allow_comments', 'featured', 'image')
             })
         ]
         prepopulated_fields = {}

@@ -45,6 +45,12 @@ class PostManager(models.Manager):
             .filter(postcontent__language = lang)\
             .extra(where = [sql])
 
+    def filterPostsByFeaturedStatus(self, query, featured):
+        return query.filter(featured=featured)
+
+    def featured(self):
+        return self.filterPostsByFeaturedStatus(self.published(), featured=True)
+
 class Post(models.Model, UrlMixin):
     date = models.DateTimeField(db_index=True)
     author = models.ForeignKey(User)
@@ -52,6 +58,8 @@ class Post(models.Model, UrlMixin):
     allow_comments = models.BooleanField()
     tags = tagging.fields.TagField()
     category = models.ForeignKey(Category)
+    featured = models.BooleanField(default=False)
+    image = models.ImageField(upload_to=settings.MICROBLOG_UPLOAD_TO, null=True, blank=True)
 
     objects = PostManager()
 

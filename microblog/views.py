@@ -123,6 +123,7 @@ def post_list(request):
         'microblog/post_list.html',
         {
             'posts': posts,
+            'featured': models.Post.objects.featured(),
         },
         context_instance = RequestContext(request)
     )
@@ -145,7 +146,7 @@ def _paginate_posts(post_list, request):
 
     return posts
 
-def _posts_list(request):
+def _posts_list(request, featured=False):
     if settings.MICROBLOG_LANGUAGE_FALLBACK_ON_POST_LIST:
         lang = None
     else:
@@ -156,7 +157,7 @@ def _posts_list(request):
     else:
         post_list = models.Post.objects.all(lang = lang)
 
-    return post_list
+    return models.Post.objects.filterPostsByFeaturedStatus(post_list, featured=featured)
 
 def _post_detail(request, content):
     return render_to_response(
