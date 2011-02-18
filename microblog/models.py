@@ -2,6 +2,7 @@
 from django.conf import settings as dsettings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.core import mail
 from django.db import models
 from django.db.models.signals import post_save
 from django.template import Template, Context
@@ -11,6 +12,10 @@ import tagging
 import tagging.fields
 
 import settings
+
+import logging
+
+log = logging.getLogger('microblog')
 
 class Category(models.Model):
     name = models.CharField(max_length = 100)
@@ -260,3 +265,35 @@ if settings.MICROBLOG_TWITTER_INTEGRATION:
             return
 
     post_save.connect(post_update_on_twitter, sender=PostContent)
+
+if settings.MICROBLOG_EMAIL_INTEGRATION:
+    _email_templates = {
+        'subject': Template(settings.MICROBLOG_EMAIL_SUBJECT_TEMPLATE),
+        'body': Template(settings.MICROBLOG_EMAIL_BODY_TEMPLATE),
+    }
+    def post_update_on_email(sender, instance, created, **kwargs):
+        if settings.MICROBLOG_EMAIL_LANGUAGES is not None and instance.language not in settings.MICROBLOG_EMAIL_LANGUAGES:
+            return
+        post = instance.post
+        if not post.is_published():
+            return
+
+        existent = set(( x.value for x in Spam.objects.filter(post=post, method='e') ))
+        recipients = set(settings.MICROBLOG_EMAIL_RECIPIENTS) - existent
+
+        ctx = Context({
+            'content': instance,
+        })
+        from django.utils.html import strip_tags
+        subject = strip_tags(_email_templates['subject'].render(ctx))
+        body_html = _email_templates['body'].render(ctx)
+        body = strip_tags(body_html)
+
+        for r in recipients:
+            log.info('"%s" email to "%s"', instance.headline.encode('utf-8'), r)
+            email = mail.EmailMultiAlternatives(subject, body, dsettings.DEFAULT_FROM_EMAIL, [r])
+            email.attach_alternative(body_html, 'text/html')
+            email.send()
+            s = Spam(post=post, method='e', value=r)
+            s.save()
+    post_save.connect(post_update_on_email, sender=PostContent)

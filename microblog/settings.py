@@ -65,6 +65,13 @@ if hasattr(settings, 'MICROBLOG_ENABLE_MODERATION'):
     else:
         MICROBLOG_MODERATION_TYPE = None
 
+# Enable forwarding of blog posts via email
+MICROBLOG_EMAIL_INTEGRATION = getattr(settings, 'MICROBLOG_EMAIL_INTEGRATION', False)
+
+MICROBLOG_EMAIL_RECIPIENTS = getattr(settings, 'MICROBLOG_EMAIL_RECIPIENTS', [])
+MICROBLOG_EMAIL_LANGUAGES = getattr(settings, 'MICROBLOG_EMAIL_LANGUAGES', None)
+MICROBLOG_EMAIL_BODY_TEMPLATE = getattr(settings, 'MICROBLOG_EMAIL_BODY_TEMPLATE', '{{ content.body|safe }}')
+MICROBLOG_EMAIL_SUBJECT_TEMPLATE = getattr(settings, 'MICROBLOG_EMAIL_SUBJECT_TEMPLATE', '{{ content.headline|safe }}')
 # Microblog twitter integration configuration
 
 # Enable the twitter integration (True or False)
