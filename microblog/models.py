@@ -119,6 +119,26 @@ class Post(models.Model, UrlMixin):
 
     get_url_path = get_absolute_url
 
+    def spammed(self, method, value):
+        return self.spam_set.filter(method=method, value=value).count() > 0
+
+SPAM_METHODS = (
+    ('e', 'email'),
+    ('t', 'twitter'),
+)
+class Spam(models.Model):
+    """
+    tiene traccia di dove, come e quando un determinato post è stato
+    pubblicizzato.
+    """
+    post = models.ForeignKey(Post)
+    method = models.CharField(max_length=1, choices=SPAM_METHODS)
+    value = models.CharField(max_length=100)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return '%s -> %s' % (self.method, self.value)
+
 class PostContentManager(models.Manager):
     def getBySlugAndDate(self, slug, year, month, day):
         return self.get(
