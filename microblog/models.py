@@ -38,7 +38,7 @@ class PostManager(models.Manager):
 
     def published(self, lang=None, q=None, user=None):
         if q is None:
-            q = self
+            q = self.all()
         if lang:
             q = self.filterPostsByLanguage(q, lang)
         if user is None or user.is_anonymous():
