@@ -88,6 +88,11 @@ MICROBLOG_TWITTER_MESSAGE_TEMPLATE = getattr(settings, 'MICROBLOG_TWITTER_MESSAG
 # ... callable to obtain the url of a post 
 MICROBLOG_TWITTER_POST_URL_MANGLER = getattr(settings, 'MICROBLOG_TWITTER_POST_URL_MANGLER', lambda p: p.get_url())
 
+# In order to use bitly as url shortening service set your credentials and use
+# 'microblog.utils.bitly_url' as MICROBLOG_TWITTER_POST_URL_MANGLER
+MICROBLOG_BITLY_LOGIN = getattr(settings, 'MICROBLOG_BITLY_LOGIN', None)
+MICROBLOG_BITLY_APIKEY = getattr(settings, 'MICROBLOG_BITLY_APIKEY', None)
+
 # Enable the pagination for posts in the post list pages
 MICROBLOG_POST_LIST_PAGINATION = getattr(settings, 'MICROBLOG_POST_LIST_PAGINATION', False)
 

@@ -6,6 +6,7 @@ from django.core import mail
 from django.db import models
 from django.db.models.signals import post_save
 from django.template import Template, Context
+from django.utils.importlib import import_module
 
 from django_urls import UrlMixin
 import tagging
@@ -240,7 +241,12 @@ if settings.MICROBLOG_TWITTER_INTEGRATION:
             return
 
         try:
-            url = settings.MICROBLOG_TWITTER_POST_URL_MANGLER(instance)
+            if not isinstance(settings.MICROBLOG_TWITTER_POST_URL_MANGLER, str):
+                url = settings.MICROBLOG_TWITTER_POST_URL_MANGLER(instance)
+            else:
+                module, attr = settings.MICROBLOG_TWITTER_POST_URL_MANGLER.rsplit('.', 1)
+                mod = import_module(module)
+                url = getattr(mod, attr)(instance)
         except Exception, e:
             message = 'Post: "%s"\n\nCannot retrieve the url: "%s"' % (instance.headline, str(e))
             mail.mail_admins('[blog] error preparing the tweet', message)
