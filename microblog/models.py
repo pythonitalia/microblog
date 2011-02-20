@@ -280,18 +280,49 @@ if settings.MICROBLOG_EMAIL_INTEGRATION:
 
         existent = set(( x.value for x in Spam.objects.filter(post=post, method='e') ))
         recipients = set(settings.MICROBLOG_EMAIL_RECIPIENTS) - existent
+        if not recipients:
+            return
 
         ctx = Context({
             'content': instance,
         })
         from django.utils.html import strip_tags
+        from lxml import html
+        from lxml.html.clean import clean_html
+
         subject = strip_tags(_email_templates['subject'].render(ctx))
-        body_html = _email_templates['body'].render(ctx)
-        body = strip_tags(body_html)
+        try:
+            hdoc = html.fromstring(_email_templates['body'].render(ctx))
+        except Exception, e:
+            message = 'Post: "%s"\n\nCannot parse as html: "%s"' % (subject, str(e))
+            mail_admins('[blog] error while sending mail', message)
+            return
+        # dalla doc di lxml:
+        # The module lxml.html.clean provides a Cleaner class for cleaning up
+        # HTML pages. It supports removing embedded or script content, special
+        # tags, CSS style annotations and much more.  Say, you have an evil web
+        # page from an untrusted source that contains lots of content that
+        # upsets browsers and tries to run evil code on the client side:
+        #
+        # Noi non dobbiamo proteggerci da codice maligno, ma vista la
+        # situazione dei client email, possiamo rimuovere embed, javascript,
+        # iframe.; tutte cose che non vengono quasi mai renderizzate per bene
+        hdoc = clean_html(hdoc)
+
+        # rendo tutti i link assoluti, in questo modo funzionano anche in un
+        # client di posta
+        hdoc.make_links_absolute(dsettings.DEFAULT_URL_PREFIX)
+
+        body_html = html.tostring(hdoc)
+
+        # per i client di posta che non supportano l'html ecco una versione in
+        # solo test
+        import html2text
+        body_text = html2text.html2text(body_html)
 
         for r in recipients:
             log.info('"%s" email to "%s"', instance.headline.encode('utf-8'), r)
-            email = mail.EmailMultiAlternatives(subject, body, dsettings.DEFAULT_FROM_EMAIL, [r])
+            email = mail.EmailMultiAlternatives(subject, body_text, dsettings.DEFAULT_FROM_EMAIL, [r])
             email.attach_alternative(body_html, 'text/html')
             email.send()
             s = Spam(post=post, method='e', value=r)
