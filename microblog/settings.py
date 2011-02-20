@@ -74,28 +74,18 @@ MICROBLOG_EMAIL_BODY_TEMPLATE = getattr(settings, 'MICROBLOG_EMAIL_BODY_TEMPLATE
 MICROBLOG_EMAIL_SUBJECT_TEMPLATE = getattr(settings, 'MICROBLOG_EMAIL_SUBJECT_TEMPLATE', '{{ content.headline|safe }}')
 # Microblog twitter integration configuration
 
-# Enable the twitter integration (True or False)
+# Enable Twitter integration
 MICROBLOG_TWITTER_INTEGRATION = getattr(settings, 'MICROBLOG_TWITTER_INTEGRATION', False)
-
-# String containing the twitter account username
+# ... True to dump the tweet on stdout
+MICROBLOG_TWITTER_DEBUG = getattr(settings, 'MICROBLOG_TWITTER_DEBUG', False)
+# ... tweet only post in this language
+MICROBLOG_TWITTER_LANGUAGES = getattr(settings, 'MICROBLOG_TWITTER_LANGUAGES', None)
+# ... username/password of the twitter account
 MICROBLOG_TWITTER_USERNAME = getattr(settings, 'MICROBLOG_TWITTER_USERNAME', None)
-
-# String containing the twitter account password
 MICROBLOG_TWITTER_PASSWORD = getattr(settings, 'MICROBLOG_TWITTER_PASSWORD', None)
-
-# String containing the template (django template language) of the message for new blogposts
-# You can use {{ title }} and {{ url }} tags
-MICROBLOG_TWITTER_MESSAGE_TEMPLATE_NEW_POST = getattr(settings, 'MICROBLOG_TWITTER_MESSAGE_TEMPLATE_NEW_POST', 'New blogpost: {{ content.headline }} ( {{ url }} )')
-
-# String containing the template (django template language) of the message for updated blogposts
-# You can use {{ title }} and {{ url }} tags
-MICROBLOG_TWITTER_MESSAGE_TEMPLATE_UPDATED_POST = getattr(settings, 'MICROBLOG_TWITTER_MESSAGE_TEMPLATE_UPDATED_POST', 'Updated blogpost: {{content.headline }} ( {{ url }} )')
-
-# String containin the language code
-# eg. "en" or "it"
-MICROBLOG_TWITTER_POST_LANGUAGE = getattr(settings, 'MICROBLOG_TWITTER_POST_LANGUAGE', MICROBLOG_DEFAULT_LANGUAGE)
-
-# Callable that mangle the given url
+# ... django template to render the tweet
+MICROBLOG_TWITTER_MESSAGE_TEMPLATE = getattr(settings, 'MICROBLOG_TWITTER_MESSAGE_TEMPLATE', '{{ headline }} ( {{ url }} )')
+# ... callable to obtain the url of a post 
 MICROBLOG_TWITTER_POST_URL_MANGLER = getattr(settings, 'MICROBLOG_TWITTER_POST_URL_MANGLER', lambda p: p.get_url())
 
 # Enable the pagination for posts in the post list pages

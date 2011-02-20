@@ -231,37 +231,54 @@ if settings.MICROBLOG_TWITTER_INTEGRATION:
             headline = headline[:i]
         return headline + "..."
 
-    _twitter_templates = {
-        True: Template(settings.MICROBLOG_TWITTER_MESSAGE_TEMPLATE_NEW_POST),
-        False: Template(settings.MICROBLOG_TWITTER_MESSAGE_TEMPLATE_UPDATED_POST),
-    }
+    _twitter_template = Template(settings.MICROBLOG_TWITTER_MESSAGE_TEMPLATE)
     def post_update_on_twitter(sender, instance, created, **kwargs):
-        if instance.language != settings.MICROBLOG_TWITTER_POST_LANGUAGE:
+        if settings.MICROBLOG_TWITTER_LANGUAGES is not None and instance.language not in settings.MICROBLOG_TWITTER_LANGUAGES:
             return
         post = instance.post
         if not post.is_published():
             return
+
         try:
             url = settings.MICROBLOG_TWITTER_POST_URL_MANGLER(instance)
-        except:
+        except Exception, e:
+            message = 'Post: "%s"\n\nCannot retrieve the url: "%s"' % (instance.headline, str(e))
+            mail.mail_admins('[blog] error preparing the tweet', message)
             return
+
+        existent = set(( x.value for x in Spam.objects.filter(post=post, method='t') ))
+        recipients = set((settings.MICROBLOG_TWITTER_USERNAME,)) - existent
+        if not recipients:
+            return
+
         context = Context({
-            "content": instance,
-            "url": url,
+            'content': instance,
+            'headline': instance.headline,
+            'url': url,
         })
-        status = _twitter_templates[created].render(context)
+        status = _twitter_template.render(context)
         diff_len = len(status) - 140
         if diff_len > 0:
-            instance.headline = truncate_headline(instance.headline, diff_len)
             context = Context({
-                "content": instance,
-                "url": url,
+                'content': instance,
+                'headline': truncate_headline(instance.headline, diff_len),
+                'url': url,
             })
-            status = _twitter_templates[created].render(context)
+            status = _twitter_template.render(context)
+        if settings.MICROBLOG_TWITTER_DEBUG:
+            print 'Tweet for', instance.headline.encode('utf-8')
+            print status
+            print '--------------------------------------------'
+            return
+        log.info('"%s" tweet on "%s"', instance.headline.encode('utf-8'), settings.MICROBLOG_TWITTER_USERNAME)
         try:
             api = twitter.Api(settings.MICROBLOG_TWITTER_USERNAME, settings.MICROBLOG_TWITTER_PASSWORD)
             api.PostUpdate(status)
-        except:
+            s = Spam(post=post, method='t', value=settings.MICROBLOG_TWITTER_USERNAME)
+            s.save()
+        except Exception, e:
+            message = 'Post: "%s"\n\nCannot post status update: "%s"' % (instance.headline, str(e))
+            mail.mail_admins('[blog] error tweeting the new status', message)
             return
 
     post_save.connect(post_update_on_twitter, sender=PostContent)
@@ -295,7 +312,7 @@ if settings.MICROBLOG_EMAIL_INTEGRATION:
             hdoc = html.fromstring(_email_templates['body'].render(ctx))
         except Exception, e:
             message = 'Post: "%s"\n\nCannot parse as html: "%s"' % (subject, str(e))
-            mail_admins('[blog] error while sending mail', message)
+            mail.mail_admins('[blog] error while sending mail', message)
             return
         # dalla doc di lxml:
         # The module lxml.html.clean provides a Cleaner class for cleaning up
