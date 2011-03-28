@@ -63,7 +63,7 @@ class PostManager(models.Manager):
 class Post(models.Model, UrlMixin):
     date = models.DateTimeField(db_index=True)
     author = models.ForeignKey(User)
-    status = models.CharField(max_length = 1, default = 'P', choices = POST_STATUS)
+    status = models.CharField(max_length = 1, default = 'D', choices = POST_STATUS)
     allow_comments = models.BooleanField()
     tags = tagging.fields.TagField()
     category = models.ForeignKey(Category)
