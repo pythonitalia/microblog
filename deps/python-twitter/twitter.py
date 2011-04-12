@@ -2577,6 +2577,19 @@ class Api(object):
     data = self._ParseAndCheckTwitter(json)
     return Status.NewFromJsonDict(data)
 
+  def PostRetweet(self, status):
+    if not self._oauth_consumer:
+      raise TwitterError("The twitter.Api instance must be authenticated.")
+
+    if isinstance(status, int):
+        sid = status
+    else:
+        sid = status.id
+    url = '%s/statuses/retweet/%s.json' % (self.base_url, sid)
+    json = self._FetchUrl(url, post_data={'force_post': ''})
+    data = self._ParseAndCheckTwitter(json)
+    return Status.NewFromJsonDict(data)
+
   def PostUpdates(self, status, continuation=None, **kwargs):
     '''Post one or more twitter status messages from the authenticated user.
 
