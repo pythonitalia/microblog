@@ -70,7 +70,7 @@ MICROBLOG_EMAIL_INTEGRATION = getattr(settings, 'MICROBLOG_EMAIL_INTEGRATION', F
 
 MICROBLOG_EMAIL_RECIPIENTS = getattr(settings, 'MICROBLOG_EMAIL_RECIPIENTS', [])
 MICROBLOG_EMAIL_LANGUAGES = getattr(settings, 'MICROBLOG_EMAIL_LANGUAGES', None)
-MICROBLOG_EMAIL_BODY_TEMPLATE = getattr(settings, 'MICROBLOG_EMAIL_BODY_TEMPLATE', '{{ content.body|safe }}')
+MICROBLOG_EMAIL_BODY_TEMPLATE = getattr(settings, 'MICROBLOG_EMAIL_BODY_TEMPLATE', '{% if content.summary %}{{ content.summary|safe }}\n{% endif %}{{ content.body|safe }}')
 MICROBLOG_EMAIL_SUBJECT_TEMPLATE = getattr(settings, 'MICROBLOG_EMAIL_SUBJECT_TEMPLATE', '{{ content.headline|safe }}')
 # Microblog twitter integration configuration
 
