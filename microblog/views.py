@@ -177,7 +177,7 @@ def _trackback_ping(request, content):
         return HttpResponse(content = x, content_type = 'text/xml', status = 400)
 
     if request.method != 'POST':
-        return failure('only POST methos is supported')
+        return failure('only POST method is supported')
 
     if not request.POST.get('url'):
         return failure('url argument is mandatory')
@@ -188,6 +188,11 @@ def _trackback_ping(request, content):
         'title': request.POST.get('title', ''),
         'excerpt': request.POST.get('excerpt', ''),
     }
+
+    from microblog.moderation import moderate
+    if not moderate(request, 'trackback', t['title'], url=t['url']):
+        return failure('moderated')
+
     content.new_trackback(**t)
     return success()
 
