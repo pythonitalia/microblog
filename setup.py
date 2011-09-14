@@ -27,7 +27,7 @@ setup(name='microblog',
         'microblog.utils',
     ],
     package_data={
-        'microblog': sum(map(recurse, ('locale', 'static', 'templates')), []),
+        'microblog': sum(map(recurse, ('deps', 'locale', 'static', 'templates')), []),
     },
     install_requires=[
         'lxml',
