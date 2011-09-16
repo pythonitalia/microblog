@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 from django.conf import settings as dsettings
 from django.contrib.auth.models import User
-from django.contrib.sites.models import Site
 from django.core import mail
 from django.db import models
 from django.db.models.signals import post_save
