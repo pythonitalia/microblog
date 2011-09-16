@@ -2,26 +2,21 @@
 from __future__ import absolute_import
 
 import re
-from random import randint
 from datetime import date
 
 from django import template
 from django.db.models import Count
-from django.conf import settings as dsettings
 from django.contrib import comments
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.template import Context
 from django.template.defaultfilters import slugify
-from django.template.loader import render_to_string
 from django.utils.translation import ugettext
 
 from microblog import models, settings
 from tagging.models import Tag
 
 register = template.Library()
-
-from django.template.context import Context
 
 # private_context, based on this recipe: http://djangosnippets.org/snippets/1687/
 def private_context(f):
