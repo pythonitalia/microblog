@@ -1,22 +1,21 @@
 # -*- coding: UTF-8 -*-
-import datetime
-from microblog import models, settings
-from tagging import models as taggingModels
-from django.contrib.auth import models as authModels
-
 from django.conf import settings as dsettings
+from django.contrib.auth import models as authModels
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, Http404
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
-from django.core.paginator import Paginator, InvalidPage, EmptyPage
+from microblog import models, settings
+
+from taggit.models import Tag, TaggedItem
+from decorator import decorator
 
 try:
     import json as simplejson
 except ImportError:
     import simplejson
-from decorator import decorator
 
 def json(f):
     """
@@ -78,9 +77,14 @@ def post_list_by_year(request, year, month=None):
     )
 
 def tag(request, tag):
-    tag = get_object_or_404(taggingModels.Tag, name = tag)
+    tag = get_object_or_404(Tag, name=tag)
     post_list = _posts_list(request, featured=None)
-    tagged_posts = taggingModels.TaggedItem.objects.get_by_model(post_list, tag)
+
+    qs = TaggedItem.objects\
+            .filter(content_type__app_label='microblog', content_type__model='post')\
+            .filter(tag=tag)
+
+    tagged_posts = post_list.filter(id__in=qs.values('object_id'))
     post_list_count = tagged_posts.count()
     posts = _paginate_posts(tagged_posts, request)
     return render_to_response(

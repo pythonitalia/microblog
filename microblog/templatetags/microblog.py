@@ -14,7 +14,7 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext
 
 from microblog import models, settings
-from tagging.models import Tag
+from taggit.models import TaggedItem, Tag
 
 register = template.Library()
 
@@ -236,10 +236,19 @@ def tags_list(parser, token):
             self.var_name = var_name
 
         def render(self, context):
-            # 2009-10-16: questo per funzionare ha bisogno di una patch a tagging
-            tags = Tag.objects.usage_for_queryset(
-                models.Post.objects.published(lang = context['LANGUAGE_CODE']),
-                counts = True)
+            posts = TaggedItem.objects\
+                    .filter(content_type__app_label='microblog', content_type__model='post')\
+                    .filter(object_id__in=models.Post.objects.published(lang=context['LANGUAGE_CODE']))
+            qs = Tag.objects\
+                    .filter(id__in=posts.values('tag_id'))\
+                    .extra(select={'n': 'lower(name)'})\
+                    .order_by('n')
+
+            counter = dict( (x['tag'], x['count']) for x in posts.values('tag').annotate(count=Count('tag')))
+            tags = []
+            for t in qs:
+                t.count = counter.get(t.id, 0)
+                tags.append(t)
             context[self.var_name] = tags
             return ''
 

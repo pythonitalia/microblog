@@ -7,11 +7,10 @@ from django.db.models.signals import post_save
 from django.template import Template, Context
 from django.utils.importlib import import_module
 
-from django_urls import UrlMixin
-import tagging
-import tagging.fields
+from taggit.managers import TaggableManager
 
-import settings
+from microblog import settings
+from microblog.django_urls import UrlMixin
 
 import logging
 
@@ -48,10 +47,9 @@ class PostManager(models.Manager):
         return q
 
     def filterPostsByLanguage(self, query, lang):
-        sql = '"microblog_postcontent"."headline" != \'\''
         return query\
             .filter(postcontent__language = lang)\
-            .extra(where = [sql])
+            .exclude(postcontent__headline='')
 
     def filterPostsByFeaturedStatus(self, query, featured):
         return query.filter(featured=featured)
@@ -64,10 +62,11 @@ class Post(models.Model, UrlMixin):
     author = models.ForeignKey(User)
     status = models.CharField(max_length = 1, default = 'D', choices = POST_STATUS)
     allow_comments = models.BooleanField()
-    tags = tagging.fields.TagField()
     category = models.ForeignKey(Category)
     featured = models.BooleanField(default=False)
     image = models.URLField(verify_exists=False, null=True, blank=True)
+
+    tags = TaggableManager()
 
     objects = PostManager()
 

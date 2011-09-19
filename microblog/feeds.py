@@ -1,12 +1,12 @@
 # -*- coding: UTF-8 -*-
-import os.path
-import settings
 from django.conf import settings as dsettings
-from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.syndication.feeds import Feed, FeedDoesNotExist
-from microblog import models
+from django.core.exceptions import ObjectDoesNotExist
 
-from tagging.models import Tag
+from microblog import models
+from microblog import settings
+
+import os.path
 
 class LatestPosts(Feed):
 
@@ -38,16 +38,18 @@ class LatestPosts(Feed):
 
     def items(self, obj):
         l = self.languages[obj]
-        return models.PostContent.objects.all().\
-            filter(language = l, post__status = 'P').\
-            exclude(headline = '').\
-            order_by('-post__date')[:10]
+        return models.PostContent.objects\
+                .all()\
+                .filter(language = l, post__status = 'P')\
+                .exclude(headline = '')\
+                .select_related('post')\
+                .order_by('-post__date')[:10]
 
     def item_pubdate(self, obj):
         return obj.post.date
 
     def item_categories(self, obj):
-        return ( x.name for x in Tag.objects.get_for_object(obj.post))
+        return ( x.name for x in obj.post.tags.all())
 
     def item_author_name(self, obj):
         user = obj.post.author

@@ -35,6 +35,6 @@ setup(name='microblog',
         'django_pingback',
         'html2text',
         'python-twitter',
-        'tagging',
+        'taggit',
     ],
 )
