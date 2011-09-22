@@ -349,3 +349,5 @@ if settings.MICROBLOG_EMAIL_INTEGRATION:
             s = Spam(post=post, method='e', value=r)
             s.save()
     post_save.connect(post_update_on_email, sender=PostContent)
+
+import moderation
