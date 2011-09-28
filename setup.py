@@ -23,6 +23,7 @@ setup(name='microblog',
     packages=[
         'microblog',
         'microblog.management',
+        'microblog.management.commands',
         'microblog.migrations',
         'microblog.templatetags',
         'microblog.utils',
