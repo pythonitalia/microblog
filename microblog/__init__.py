@@ -2,7 +2,7 @@
 import os.path
 import sys
 
-sys.path.insert(0, os.path.join(__file__, 'dpes'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'deps'))
 
 # è necessario spostare qui (originariamente era in settings.py) la
 # registrazione della pingback function perchè register_pingback risolve
