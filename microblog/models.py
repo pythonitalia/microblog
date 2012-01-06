@@ -166,21 +166,30 @@ class PostContent(models.Model, UrlMixin):
 
     objects = PostContentManager()
 
-    @models.permalink
-    def get_absolute_url(self):
+    @classmethod
+    def build_absolute_url(cls, post, content):
         if settings.MICROBLOG_URL_STYLE == 'date':
-            date = self.post.date
+            date = post.date
             return ('microblog-post-detail', (), {
                 'year': str(date.year),
                 'month': str(date.month).zfill(2),
                 'day': str(date.day).zfill(2),
-                'slug': self.slug
+                'slug': content.slug
             })
         elif settings.MICROBLOG_URL_STYLE == 'category':
             return ('microblog-post-detail', (), {
-                'category': self.post.category.name,
-                'slug': self.slug
+                'category': post.category.name,
+                'slug': content.slug
             })
+
+    @models.permalink
+    def get_absolute_url(self):
+        # è molto brutto che una cosa apparantemente innocua come la
+        # costruzione della url richieda una query verso il db; per minimizzare
+        # gli effetti faccio cache a livello di istanza
+        if not hasattr(self, '_url'):
+            self._url = PostContent.build_absolute_url(self.post, self)
+        return self._url
 
     get_url_path = get_absolute_url
 
