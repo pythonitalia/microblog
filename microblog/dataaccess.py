@@ -122,4 +122,5 @@ def post_data(pid, lang):
         'content': content,
         'url': reverse(burl[0], args=burl[1], kwargs=burl[2]),
         'comments': list(comment_list),
+        'tags': list(post.tags.all()),
     }
