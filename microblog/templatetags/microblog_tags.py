@@ -36,7 +36,7 @@ def _fullaccess(ctx):
         return user.is_authenticated()
 
 @fancy_tag(register, takes_context=True)
-def post_list(context, post_type='any'):
+def post_list(context, post_type='any', count=None):
     posts = dataaccess.post_list(_lang(context))
     if not _fullaccess(context):
         posts = filter(lambda x: x.is_published(), posts)
@@ -44,6 +44,8 @@ def post_list(context, post_type='any'):
         posts = filter(lambda x: x.featured, posts)
     elif post_type == 'non-featured':
         posts = filter(lambda x: not x.featured, posts)
+    if count is not None:
+        posts = posts[:count]
     return posts
 
 @fancy_tag(register, takes_context=True)
@@ -87,12 +89,6 @@ def tags_list(context):
         for t in tmap.get(p.id, []):
             tags[t.name] += 1
     return sorted(tags.items(), key=lambda x: x[0].name)
-
-@fancy_tag(register, takes_context=True)
-def latest_blog_post(context, count=1):
-    posts = post_list(context)
-    posts.sort(key=lambda x: x.date, reverse=True)
-    return posts[:count]
 
 @fancy_tag(register, takes_context=True)
 def get_post_data(context, pid):
