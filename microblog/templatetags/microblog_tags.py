@@ -78,7 +78,7 @@ def category_list(context):
     categories = defaultdict(lambda: 0)
     for p in posts:
         categories[p.category] += 1
-    return sorted(categories.items(), key=lambda x: x[0].category.name)
+    return sorted(categories.items(), key=lambda x: x[0].name)
 
 @fancy_tag(register, takes_context=True)
 def tags_list(context):
@@ -88,7 +88,7 @@ def tags_list(context):
     for p in posts:
         for t in tmap.get(p.id, []):
             tags[t.name] += 1
-    return sorted(tags.items(), key=lambda x: x[0].name)
+    return sorted(tags.items())
 
 @fancy_tag(register, takes_context=True)
 def get_post_data(context, pid):
