@@ -3,7 +3,7 @@ from django.conf import settings as dsettings
 from django.contrib.auth import models as authModels
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.http import HttpResponse, Http404
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
 
@@ -120,15 +120,7 @@ def author(request, author):
     )
 
 def post_list(request):
-    posts = _posts_list(request)
-    return render_to_response(
-        'microblog/post_list.html',
-        {
-            'posts': _paginate_posts(posts, request),
-            'featured': models.Post.objects.featured(),
-        },
-        context_instance = RequestContext(request)
-    )
+    return render(request, 'microblog/post_list.html', {})
 
 def _paginate_posts(post_list, request):
     if settings.MICROBLOG_POST_LIST_PAGINATION:
