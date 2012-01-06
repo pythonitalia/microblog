@@ -25,7 +25,6 @@ def cache_me(key=None, ikey=None, signals=(), models=(), timeout=WEEK):
             else:
                 ks = (ikey,)
             if ks:
-                print 'invalidate', ks
                 cache.delete_many(map(hashme, ks))
 
         if ikey or (ikey is None and key is None):
@@ -43,7 +42,6 @@ def cache_me(key=None, ikey=None, signals=(), models=(), timeout=WEEK):
                 k = key(*args, **kwargs)
             else:
                 k = key % args
-            print 'k', k
             return hashme(k)
 
         @functools.wraps(f)
@@ -51,11 +49,8 @@ def cache_me(key=None, ikey=None, signals=(), models=(), timeout=WEEK):
             k = _key(*args, **kwargs)
             data = cache.get(k)
             if data is None:
-                print 'miss', k
                 data = f(*args, **kwargs)
                 cache.set(k, data, timeout)
-            else:
-                print 'hit', k
             return data
         wrapper.cachekey = _key
             
