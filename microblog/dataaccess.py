@@ -75,8 +75,10 @@ def _i_post_list(sender, **kw):
     ikey=_i_post_list)
 def post_list(lang):
     qs = models.Post.objects\
-            .byLanguage(lang)\
-            .select_related('category', 'author')
+        .all()\
+        .byLanguage(lang)\
+        .order_by('-date')\
+        .select_related('category', 'author')
     return list(qs)
 
 @cache_me(models=(models.Post,))
