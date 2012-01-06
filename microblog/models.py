@@ -3,6 +3,7 @@ from django.conf import settings as dsettings
 from django.contrib.auth.models import User
 from django.core import mail
 from django.db import models
+from django.db.models.query import Q
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save
 from django.template import Template, Context
@@ -40,7 +41,7 @@ class PostManager(models.Manager):
         def byLanguage(self, lang):
             return self\
                 .filter(postcontent__language=lang)\
-                .exclude(postcontent__headline='')
+                .exclude(id__in=Post.objects.filter(postcontent__language=lang, postcontent__headline=''))
 
         def byFeatured(self, featured):
             return self.filter(featured=featured)
