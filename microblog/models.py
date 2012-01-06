@@ -65,7 +65,6 @@ class Post(models.Model, UrlMixin):
         return "Post of %s on %s" % (self.author, self.date)
 
     class Meta:
-        ordering = ('-date',)
         get_latest_by = 'date'
 
     def is_published(self):
