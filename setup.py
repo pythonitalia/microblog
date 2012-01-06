@@ -37,5 +37,6 @@ setup(name='microblog',
         'html2text',
         'python-twitter',
         'django-taggit',
+        'fancy_tag',
     ],
 )
