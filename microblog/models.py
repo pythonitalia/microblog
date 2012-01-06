@@ -3,6 +3,7 @@ from django.conf import settings as dsettings
 from django.contrib.auth.models import User
 from django.core import mail
 from django.db import models
+from django.db.models.query import QuerySet
 from django.db.models.signals import post_save
 from django.template import Template, Context
 from django.utils.importlib import import_module
@@ -29,33 +30,23 @@ class Category(models.Model):
 POST_STATUS = (('P', 'Pubblicato'), ('D', 'Bozza'))
 
 class PostManager(models.Manager):
-    def all(self, lang = None):
-        q = super(PostManager, self).all()
-        if lang:
-            q = self.filterPostsByLanguage(q, lang)
-        return q
+    def get_query_set(self):
+        return self._QuerySet(self.model)
 
-    def published(self, lang=None, q=None, user=None):
-        if q is None:
-            q = self.all()
-        if lang:
-            q = self.filterPostsByLanguage(q, lang)
-        if user is None or user.is_anonymous():
-            q = q.filter(status='P')
-        elif not user.is_superuser:
-            q = q.filter(models.Q(author=user) | models.Q(status='P'))
-        return q
+    def __getattr__(self, name):
+        return getattr(self.all(), name)
 
-    def filterPostsByLanguage(self, query, lang):
-        return query\
-            .filter(postcontent__language = lang)\
-            .exclude(postcontent__headline='')
+    class _QuerySet(QuerySet):
+        def byLanguage(self, lang):
+            return self\
+                .filter(postcontent__language=lang)\
+                .exclude(postcontent__headline='')
 
-    def filterPostsByFeaturedStatus(self, query, featured):
-        return query.filter(featured=featured)
+        def byFeatured(self, featured):
+            return self.filter(featured=featured)
 
-    def featured(self):
-        return self.filterPostsByFeaturedStatus(self.published(), featured=True)
+        def published(self):
+            return self.filter(status='P')
 
 class Post(models.Model, UrlMixin):
     date = models.DateTimeField(db_index=True)
