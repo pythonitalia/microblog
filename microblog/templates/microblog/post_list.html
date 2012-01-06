@@ -1,5 +1,5 @@
 {% extends "microblog/base.html" %}
-{% load microblog %}
+{% load microblog_tags %}
 {% block BLOG_HEADER %}
   <h1>Posts list</h1>
   <form action="/i18n/setlang/" method="post">
@@ -12,8 +12,9 @@
   </form>
 {% endblock %}
 {% block BLOG_CONTENT %}
+    {% post_list as posts %}
     <ul class="blog-archive">
-    {% for post in posts.object_list %}
+    {% for post in posts %}
         <li>{% show_post_summary post %}</li>
     {% empty %}
         <li>Empty blog</li>

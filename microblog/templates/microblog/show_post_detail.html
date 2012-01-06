@@ -1,4 +1,4 @@
-{% load microblog %}
+{% load microblog_tags %}
 {% if content %}
 <div class="microblog post-detail">
     {% trackback_rdf content %}
@@ -16,7 +16,7 @@
         <span>Pubblicato da</span> <b>{{ post.author.first_name }}</b> il {{ post.date|date:"d F Y" }}
     </p>
     {% show_social_networks content %}
-    {% show_post_comments content.post %}
+    {% show_post_comments post %}
     {% if post.allow_comments %}
         {% load comments %}
         <div class="comments-form">

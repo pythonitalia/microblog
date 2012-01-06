@@ -1,4 +1,4 @@
-{% load microblog %}
+{% load microblog_tags %}
 {% if content %}
 <div class="microblog post-summary{% if post.featured %} featured{% endif %}">
     {% if post.image %}
@@ -8,14 +8,13 @@
         {% if not post.is_published %}
         <span class="draft">[DRAFT]</span>
         {% endif %}
-        <a title="Permalink a questo articolo" href="{{ content.get_absolute_url }}">{{ content.headline }}</a>
+        <a title="Permalink a questo articolo" href="{{ url }}">{{ content.headline }}</a>
     </h2>
     <div class="summary">{{ content|prepare_summary|safe }}</div>
     <p class="metadata">
         <span class="blog-author-name">{{ post.author.first_name }} {{ post.author.last_name }}</span>
         {{ post.date|timesince }} |
-        {% get_post_comment_count content.post as comments %}
-        <a title="Commenti articolo" href="{{ content.get_absolute_url }}#comments">Commenti ({{ comments }})</a>
+        <a title="Commenti articolo" href="{{ url }}#comments">Commenti ({{ comments|length }})</a>
     </p>
 </div>
 {% endif %}

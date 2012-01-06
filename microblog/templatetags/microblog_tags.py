@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
-from __future__ import absolute_import
-
 import re
+from collections import defaultdict
 from datetime import date
 
 from django import template
@@ -13,274 +12,102 @@ from django.template import Context
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext
 
-from microblog import models, settings
+from microblog import dataaccess
+from microblog import models
+from microblog import settings
 from taggit.models import TaggedItem, Tag
+
+from fancy_tag import fancy_tag
 
 register = template.Library()
 
-# private_context, based on this recipe: http://djangosnippets.org/snippets/1687/
-def private_context(f):
-    from functools import wraps
-
-    @wraps(f)
-    def private_context_wrapper(context, *args, **kwargs):
-        c = Context(context)
-        return f(c, *args, **kwargs)
-
-    return private_context_wrapper
-
-class LastBlogPost(template.Node):
-    def __init__(self, limit, var_name):
-        self.var_name = var_name
-        self.limit = limit
-
-    def render(self, context):
-        lang = context.get('LANGUAGE_CODE', settings.MICROBLOG_DEFAULT_LANGUAGE)
-        posts = models.Post.objects.published().select_related()
-        if self.limit:
-            posts = posts[:self.limit]
-        result = [ (p, p.content(lang)) for p in posts ]
-        context[self.var_name] = result
-        return ''
-        
-@register.tag
-def last_blog_post(parser, token):
-    contents = token.split_contents()
-    tag_name = contents[0]
-    limit = None
+def _lang(ctx):
     try:
-        if contents[1] != 'as':
-            try:
-                limit = int(contents[1])
-            except (ValueError, TypeError):
-                raise template.TemplateSyntaxError("%r tag argument should be an integer" % tag_name)
-        else:
-            limit = None
-        if contents[-2] != 'as':
-            raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
-        var_name = contents[-1]
-    except IndexError:
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
-    return LastBlogPost(limit, var_name)
+        return ctx['LANGUAGE_CODE']
+    except KeyError:
+        return settings.MICROBLOG_DEFAULT_LANGUAGE
 
-@register.tag
-def year_list(parser, token):
-    """
-    {% year_list ["include-empty"] as var_name %}
-    """
-    class Years(template.Node):
-        def __init__(self, include_empty, var_name):
-            self.include_empty = bool(include_empty)
-            self.var_name = var_name
-        def render(self, context):
-            # questo funziona solo con sqlite
-            sql = """
-            SELECT strftime('%%%%Y', date) as d, count(*)
-            FROM microblog_post
-            %s
-            GROUP BY strftime('%%%%Y', date)
-            ORDER BY d DESC;
-            """
-            if context['user'].is_anonymous():
-                sql = sql % "WHERE microblog_post.status = 'P'"
-            else:
-                sql = sql % ''
-
-            from django.db import connection, transaction
-            cursor = connection.cursor()
-
-            cursor.execute(sql)
-            context[self.var_name] = cursor.fetchall()
-            return ''
-
-    contents = token.split_contents()
-    tag_name = contents.pop(0)
-    if len(contents) > 2:
-        if contents.pop(0) != '"include-empty"':
-            raise template.TemplateSyntaxError("%r tag argument should be \"include-empty\"" % tag_name)
-        empty = True
-    else:
-        empty = False
-
-    if contents[-2] != 'as':
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
-    var_name = contents[-1]
-    return Years(empty, var_name)
-
-@register.tag
-def month_list(parser, token):
-    """
-    {% year_list ["include-empty"] as var_name %}
-    """
-    class Months(template.Node):
-        def __init__(self, include_empty, var_name):
-            self.include_empty = bool(include_empty)
-            self.var_name = var_name
-        def render(self, context):
-            # questo funziona solo con sqlite
-            sql = """
-            SELECT strftime('%%%%Y/%%%%m', date) as d, count(*)
-            FROM microblog_post
-            %s
-            GROUP BY strftime('%%%%Y/%%%%m', date)
-            ORDER BY d DESC;
-            """
-            if context['user'].is_anonymous():
-                sql = sql % "WHERE microblog_post.status = 'P'"
-            else:
-                sql = sql % ''
-
-            from django.db import connection, transaction
-            cursor = connection.cursor()
-
-            cursor.execute(sql)
-            output = []
-            for row in cursor.fetchall():
-                year, month = map(int, row[0].split('/'))
-                d = date(day=1, month=month, year=year)
-                output.append((d, row[1]))
-            context[self.var_name] = output
-            return ''
-
-    contents = token.split_contents()
-    tag_name = contents.pop(0)
-    if len(contents) > 2:
-        if contents.pop(0) != '"include-empty"':
-            raise template.TemplateSyntaxError("%r tag argument should be \"include-empty\"" % tag_name)
-        empty = True
-    else:
-        empty = False
-
-    if contents[-2] != 'as':
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
-    var_name = contents[-1]
-    return Months(empty, var_name)
-
-@register.tag
-def category_list(parser, token):
-    """
-    {% category_list ["include-empty"] as var_name %}
-    """
-    class Categories(template.Node):
-        def __init__(self, include_empty, var_name):
-            self.include_empty = bool(include_empty)
-            self.var_name = var_name
-        def render(self, context):
-            if settings.MICROBLOG_LANGUAGE_FALLBACK_ON_POST_LIST:
-                lang = None
-            else:
-                lang = context['LANGUAGE_CODE']
-            if context['user'].is_anonymous():
-                # se l'utente non è registrato mostro solo i post pubblicabili,
-                # quelli, cioè, che non sono in draft e hanno una traduzione
-                # nella lingua corrente.
-
-                # purtroppo non riesco ad esprimere con una sola query
-                # (modificando c) il filtro sui post pubblicabili senza
-                # ripetere qui il codice presente nel PostManager.
-                # Al momento ho optato per una doppia query, se le prestazioni
-                # dovessero risentirne possiamo utilizzare una cache o fare un
-                # po' di refactoring.
-                posts = models.Post.objects.published(lang = lang)
-                c = models.Category.objects.filter(post__in = list(posts))
-            else:
-                c = models.Category.objects.all()
-            c = c.order_by('name').annotate(count = Count('post'))
-            if not self.include_empty:
-                c = c.filter(count__gt = 0)
-            context[self.var_name] = c
-            return ''
-
-    contents = token.split_contents()
-    tag_name = contents.pop(0)
-    if len(contents) > 2:
-        if contents.pop(0) != '"include-empty"':
-            raise template.TemplateSyntaxError("%r tag argument should be \"include-empty\"" % tag_name)
-        empty = True
-    else:
-        empty = False
-            
-    if contents[-2] != 'as':
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
-    var_name = contents[-1]
-    return Categories(empty, var_name)
-
-@register.tag
-def author_list(parser, token):
-    """
-    {% author_list as var_name %}
-    """
-    class Authors(template.Node):
-        def __init__(self, var_name):
-            self.var_name = var_name
-
-        def render(self, context):
-            authors = set([ p.author for p in models.Post.objects.published() ])
-            context[self.var_name] = authors
-            return ''
-
-    contents = token.split_contents()
-    tag_name = contents.pop(0)
-    if contents[-2] != 'as':
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
-    var_name = contents[-1]
-    return Authors(var_name)
-
-@register.tag
-def tags_list(parser, token):
-    """
-    {% tags_list as var_name %}
-    """
-    class Tags(template.Node):
-        def __init__(self, var_name):
-            self.var_name = var_name
-
-        def render(self, context):
-            posts = TaggedItem.objects\
-                    .filter(content_type__app_label='microblog', content_type__model='post')\
-                    .filter(object_id__in=models.Post.objects.published(lang=context['LANGUAGE_CODE']))
-            qs = Tag.objects\
-                    .filter(id__in=posts.values('tag_id'))\
-                    .extra(select={'n': 'lower(name)'})\
-                    .order_by('n')
-
-            counter = dict( (x['tag'], x['count']) for x in posts.values('tag').annotate(count=Count('tag')))
-            tags = []
-            for t in qs:
-                t.count = counter.get(t.id, 0)
-                tags.append(t)
-            context[self.var_name] = tags
-            return ''
-
-    contents = token.split_contents()
-    tag_name = contents.pop(0)
-    if contents[-2] != 'as':
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % tag_name)
-    var_name = contents[-1]
-    return Tags(var_name)
-
-@private_context
-def _show_post_summary(context, post):
-    if context['user'].is_anonymous() and not post.is_published():
-        return {}
+def _fullaccess(ctx):
     try:
-        content = post.content(lang = context['LANGUAGE_CODE'], fallback = True)
-    except models.PostContent.DoesNotExist:
-        content = None
+        user = ctx['user']
+    except KeyError:
+        return False
+    else:
+        return user.is_authenticated()
 
-    context.update({
-        'post': post,
-        'content': content,
-    })
-    return context
+@fancy_tag(register, takes_context=True)
+def post_list(context, post_type='any'):
+    posts = dataaccess.post_list(_lang(context))
+    if not _fullaccess(context):
+        posts = filter(lambda x: x.is_published(), posts)
+    if post_type == 'featured':
+        posts = filter(lambda x: x.featured, posts)
+    elif post_type == 'non-featured':
+        posts = filter(lambda x: not x.featured, posts)
+    return posts
 
-@register.inclusion_tag('microblog/show_post_entry.html', takes_context=True)
-def show_post_entry(context, post):
-    return _show_post_summary(context, post)
+@fancy_tag(register, takes_context=True)
+def year_list(context):
+    posts = post_list(context)
+    years = defaultdict(lambda: 0)
+    for p in posts:
+        years[date(day=1, month=1, year=p.date.year)] += 1
+    return sorted(years.items())
+
+@fancy_tag(register, takes_context=True)
+def month_list(context):
+    posts = post_list(context)
+    months = defaultdict(lambda: 0)
+    for p in posts:
+        months[date(day=1, month=p.date.month, year=p.date.year)] += 1
+    return sorted(months.items())
+
+@fancy_tag(register, takes_context=True)
+def author_list(context):
+    posts = post_list(context)
+    authors = defaultdict(lambda: 0)
+    for p in posts:
+        authors[p.author] += 1
+    return sorted(authors.items(), key=lambda x: x[0].author.first_name + x[0].author.last_name)
+
+@fancy_tag(register, takes_context=True)
+def category_list(context):
+    posts = post_list(context)
+    categories = defaultdict(lambda: 0)
+    for p in posts:
+        categories[p.category] += 1
+    return sorted(categories.items(), key=lambda x: x[0].category.name)
+
+@fancy_tag(register, takes_context=True)
+def tags_list(context):
+    posts = post_list(context)
+    tmap = dataaccess.tag_map()
+    tags = defaultdict(lambda: 0)
+    for p in posts:
+        for t in tmap.get(p.id, []):
+            tags[t.name] += 1
+    return sorted(tags.items(), key=lambda x: x[0].name)
+
+@fancy_tag(register, takes_context=True)
+def latest_blog_post(context, count=1):
+    posts = post_list(context)
+    posts.sort(key=lambda x: x.date, reverse=True)
+    return posts[:count]
+
+@fancy_tag(register, takes_context=True)
+def get_post_data(context, pid):
+    return dataaccess.post_data(pid, _lang(context))
+
+@fancy_tag(register, takes_context=True)
+def get_post_comment(context, post):
+    data = dataaccess.post_data(post.id, _lang(context))
+    return data['comments']
 
 @register.inclusion_tag('microblog/show_post_summary.html', takes_context=True)
 def show_post_summary(context, post):
-    return _show_post_summary(context, post)
+    ctx = Context(context)
+    ctx.update(dataaccess.post_data(post.id, _lang(context)))
+    return ctx
 
 @register.inclusion_tag('microblog/show_post_detail.html', takes_context=True)
 def show_post_detail(context, content, options=None):
@@ -326,61 +153,21 @@ def show_reactions_list(content):
         'reactions': reactions,
     }
 
-class PostContent(template.Node):
-    def __init__(self, arg, var_name):
-        try:
-            self.pid = int(arg)
-        except ValueError:
-            self.pid = template.Variable(arg)
-        self.var_name = var_name
-
-    def render(self, context):
-        try:
-            pid = self.pid.resolve(context)
-        except AttributeError:
-            pid = self.pid
-        except template.VariableDoesNotExist:
-            pid = None
-        if pid:
-            dlang = settings.MICROBLOG_DEFAULT_LANGUAGE
-            lang = context.get('LANGUAGE_CODE', dlang)
-            contents = dict((c.language, c) for c in models.PostContent.objects.filter(post = pid))
-            for l in (lang, dlang) + tuple(contents.keys()):
-                try:
-                    content = contents[l]
-                except KeyError:
-                    continue
-                if content.body:
-                    break
-            else:
-                content = None
-        else:
-            content = None
-        context[self.var_name] = content
-        return ""
-
-@register.tag
-def get_post_content(parser, token):
-    contents = token.split_contents()
-    try:
-        tag_name, arg, _, var_name = contents
-    except ValueError:
-        raise template.TemplateSyntaxError("%r tag's argument should be an integer" % contents[0])
-    return PostContent(arg, var_name)
-
-
 last_close = re.compile(r'(</[^>]+>)$')
 
 @register.filter
-def prepare_summary(postcontent):
+def prepare_summary(content):
     """
     Aggiunge al summary il link continua che punta al body del post
     """
-    if not postcontent.body:
-        return postcontent.summary
-    summary = postcontent.summary
+    summary = content.summary
+    if not content.body:
+        return summary
+    data = dataaccess.post_data(content.post_id, content.language)
     continue_string = ugettext("Continua")
-    link = '<span class="continue"> <a href="%s">%s&nbsp;&rarr;</a></span>' % (postcontent.get_absolute_url(), continue_string)
+    link = '<span class="continue"> <a href="%s">%s&nbsp;&rarr;</a></span>' % (data['url'], continue_string)
+    # se il summary contiene del markup cerco di inserire il link dentro il tag
+    # più esterno
     match = last_close.search(summary)
     if match:
         match = match.group(1)
@@ -395,70 +182,13 @@ def user_name_for_url(user):
     """
     return slugify('%s-%s' % (user.first_name, user.last_name))
 
-@register.tag
-def get_post_comment_count(parser, token):
-    """
-    {% get_post_comment_count post as var_name %}
-    """
-    class CommentsCount(template.Node):
-        def __init__(self, object, var_name):
-            self.object = template.Variable(object)
-            self.var_name = var_name
-            self.comment_model = comments.get_model()
-
-        def render(self, context):
-            o = self.object.resolve(context)
-            ctype = ContentType.objects.get_for_model(o)
-            qs = self.comment_model.objects.filter(
-                content_type = ctype,
-                object_pk = o.id,
-                is_public = True,
-            ).count()
-            context[self.var_name] = qs
-            return ''
-
-    contents = token.split_contents()
-    try:
-        tag_name, arg, _, var_name = contents
-    except ValueError:
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % contents[0])
-    return CommentsCount(arg, var_name)
-
-@register.tag
-def get_post_comment(parser, token):
-    """
-    {% get_post_comment post as var_name %}
-    """
-    class Comments(template.Node):
-        def __init__(self, object, var_name):
-            self.object = template.Variable(object)
-            self.var_name = var_name
-            self.comment_model = comments.get_model()
-
-        def render(self, context):
-            o = self.object.resolve(context)
-            ctype = ContentType.objects.get_for_model(o)
-            qs = self.comment_model.objects.filter(
-                content_type = ctype,
-                object_pk = o.id,
-                is_public = True,
-            )
-            context[self.var_name] = qs
-            return ''
-
-    contents = token.split_contents()
-    try:
-        tag_name, arg, _, var_name = contents
-    except ValueError:
-        raise template.TemplateSyntaxError("%r tag had invalid arguments" % contents[0])
-    return Comments(arg, var_name)
-
 @register.inclusion_tag('microblog/show_post_comments.html', takes_context = True)
 def show_post_comments(context, post):
-    context.update({
+    ctx = Context(context)
+    ctx.update({
         'post': post,
     })
-    return context
+    return ctx
 
 @register.filter
 def post_published(q, lang):
