@@ -16,7 +16,7 @@ def recurse(path):
     return output
 
 setup(name='microblog',
-    version='0.1',
+    version='0.1.3',
     description='django microblog',
     author='dvd',
     author_email='dvd@develer.com',
