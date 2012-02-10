@@ -135,18 +135,8 @@ def trackback_rdf(content):
 
 @register.inclusion_tag('microblog/show_reactions_list.html')
 def show_reactions_list(content):
-    trackbacks = content.trackback_set.all()
-    if settings.MICROBLOG_PINGBACK_SERVER:
-        from pingback.models import Pingback
-        pingbacks = Pingback.objects.pingbacks_for_object(content).filter(approved = True)
-    else:
-        pingbacks = []
-    reactions = sorted(list(trackbacks) + list(pingbacks), key = lambda r: r.date, reverse = True)
-    for ix, r in enumerate(reactions):
-        if not hasattr(r, 'excerpt'):
-            r.excerpt = r.content
     return {
-        'reactions': reactions,
+        'reactions': dataaccess.get_reactions(content.id),
     }
 
 last_close = re.compile(r'(</[^>]+>)$')

@@ -120,7 +120,38 @@ def post_data(pid, lang):
     return {
         'post': post,
         'content': content,
-        'url': reverse(burl[0], args=burl[1], kwargs=burl[2]),
+        'url': dsettings.DEFAULT_URL_PREFIX + reverse(burl[0], args=burl[1], kwargs=burl[2]),
         'comments': list(comment_list),
         'tags': list(post.tags.all()),
     }
+
+def _i_get_reactions(sender, **kw):
+    if sender is models.Trackback:
+        return 'm:reaction:%s' % kw['instance'].content_id
+    else:
+        return 'm:reaction:%s' % kw['instance'].object_id
+if settings.MICROBLOG_PINGBACK_SERVER:
+    deco = cache_me(models=(models.Trackback,),
+        key='m:reactions:%s',
+        ikey=_i_get_reactions)
+else:
+    from pingback.models import Pingback
+    deco = cache_me(models=(models.Trackback, Pingback),
+        key='m:reactions:%s',
+        ikey=_i_get_reactions)
+@deco
+def get_reactions(cid):
+    trackbacks = models.Trackback.objects.filter(content=cid)
+    if settings.MICROBLOG_PINGBACK_SERVER:
+        from pingback.models import Pingback
+        # Purtroppo il metodo pingbacks_for_object vuole un oggetto non un id
+        content = models.PostContent.objects.get(id=cid)
+        pingbacks = Pingback.objects.pingbacks_for_object(content).filter(approved=True)
+    else:
+        pingbacks = []
+    reactions = sorted(list(trackbacks) + list(pingbacks), key=lambda r: r.date, reverse=True)
+    # normalizzo le reactions, mi assicuro che tutte abbiano un excerpt
+    for ix, r in enumerate(reactions):
+        if not hasattr(r, 'excerpt'):
+            r.excerpt = r.content
+    return reactions
