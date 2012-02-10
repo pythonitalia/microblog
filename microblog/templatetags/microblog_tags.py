@@ -4,9 +4,6 @@ from collections import defaultdict
 from datetime import date
 
 from django import template
-from django.db.models import Count
-from django.contrib import comments
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.template import Context
 from django.template.defaultfilters import slugify
@@ -15,7 +12,6 @@ from django.utils.translation import ugettext
 from microblog import dataaccess
 from microblog import models
 from microblog import settings
-from taggit.models import TaggedItem, Tag
 
 from fancy_tag import fancy_tag
 
