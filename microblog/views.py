@@ -42,6 +42,9 @@ def render_json(f):
         return HttpResponse(content = result, content_type = ct, status = status)
     return decorator(wrapper, f)
 
+def post_list(request):
+    return render(request, 'microblog/post_list.html', {})
+
 def category(request, category):
     category = get_object_or_404(models.Category, name = category)
     post_list = _posts_list(request, featured=None).filter(category=category)
@@ -59,19 +62,11 @@ def category(request, category):
     )
 
 def post_list_by_year(request, year, month=None):
-    post_list = _posts_list(request).filter(date__year=year)
-    if month is not None:
-        post_list = post_list.filter(date__month=month)
-    post_list_count = post_list.count()
-    posts = _paginate_posts(post_list, request)
-
     return render_to_response(
         'microblog/list_by_year.html',
         {
             'year': year,
             'month': month,
-            'posts': posts,
-            'post_count': post_list_count,
         },
         context_instance = RequestContext(request)
     )
@@ -118,9 +113,6 @@ def author(request, author):
         },
         context_instance = RequestContext(request)
     )
-
-def post_list(request):
-    return render(request, 'microblog/post_list.html', {})
 
 def _paginate_posts(post_list, request):
     if settings.MICROBLOG_POST_LIST_PAGINATION:
@@ -219,7 +211,7 @@ def _comment_count(request, content):
         resp, page = h.request(url)
         if resp.status != 200:
             return -1
-        page = simplejson.loads(page)
+        page = json.loads(page)
         if not page['succeeded']:
             return -1
         elif page['message'] is None:
@@ -236,44 +228,52 @@ def _post404(f):
     return wrapper
 
 if settings.MICROBLOG_URL_STYLE == 'date':
+    def _get(slug, year, month, day):
+        return models.PostContent.objects\
+            .select_related('post')\
+            .getBySlugAndDate(slug, year, month, day)
     @_post404
     def post_detail(request, year, month, day, slug):
         return _post_detail(
             request,
-            content = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
+            content=_get(slug, year, month, day)
         )
 
     @_post404
     def trackback_ping(request, year, month, day, slug):
         return _trackback_ping(
             request,
-            content = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
+            content=_get(slug, year, month, day)
         )
 
     @_post404
     def comment_count(request, year, month, day, slug):
         return _comment_count(
             request,
-            content = models.PostContent.objects.getBySlugAndDate(slug, year, month, day)
+            content=_get(slug, year, month, day)
         )
 elif settings.MICROBLOG_URL_STYLE == 'category':
+    def _get(slug, category):
+        return models.PostContent.objects\
+            .select_related('post')\
+            .getBySlugAndCategory(slug, category)
     @_post404
     def post_detail(request, category, slug):
         return _post_detail(
             request,
-            content = models.PostContent.objects.getBySlugAndCategory(slug, category)
+            content=_get(slug, category),
         )
 
     @_post404
     def trackback_ping(request, category, slug):
         return _trackback_ping(
             request,
-            content = models.PostContent.objects.getBySlugAndCategory(slug, category)
+            content=_get(slug, category),
         )
 
     @_post404
     def comment_count(request, category, slug):
         return _comment_count(
             request,
-            content = models.PostContent.objects.getBySlugAndCategory(slug, category)
+            content=_get(slug, category),
         )
