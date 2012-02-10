@@ -135,27 +135,34 @@ class Spam(models.Model):
         return '%s -> %s' % (self.method, self.value)
 
 class PostContentManager(models.Manager):
-    def getBySlugAndDate(self, slug, year, month, day):
-        return self.get(
-            slug = slug,
-            post__date__year = int(year),
-            post__date__month = int(month),
-            post__date__day = int(day),
-        )
+    def get_query_set(self):
+        return self._QuerySet(self.model)
 
-    def getBySlugAndCategory(self, slug, category):
-        return self.get(
-            slug = slug,
-            post__category__name = category,
-        )
+    def __getattr__(self, name):
+        return getattr(self.all(), name)
 
-    def published(self, language = None):
-        q = self\
-            .filter(post__status = 'P')\
-            .order_by('-post__date')
-        if language:
-            q = q.filter(language = language)
-        return q
+    class _QuerySet(QuerySet):
+        def getBySlugAndDate(self, slug, year, month, day):
+            return self.get(
+                slug = slug,
+                post__date__year = int(year),
+                post__date__month = int(month),
+                post__date__day = int(day),
+            )
+
+        def getBySlugAndCategory(self, slug, category):
+            return self.get(
+                slug = slug,
+                post__category__name = category,
+            )
+
+        def published(self, language=None):
+            q = self\
+                .filter(post__status='P')\
+                .order_by('-post__date')
+            if language:
+                q = q.filter(language=language)
+            return q
 
 class PostContent(models.Model, UrlMixin):
     post = models.ForeignKey(Post)
