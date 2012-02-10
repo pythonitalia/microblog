@@ -97,9 +97,7 @@ class Post(models.Model, UrlMixin):
         return c
 
     def get_trackback_url(self):
-        date = self.date
-        content = self.postcontent_set.all()[0]
-        return content.get_url() + '/trackback'
+        return self.get_absolute_url() + '/trackback'
 
     def get_absolute_url(self):
         """
@@ -108,8 +106,11 @@ class Post(models.Model, UrlMixin):
         avere avere una url che identifica un post senza dover per forza
         passare da una traduzione.
         """
-        content = self.content(settings.MICROBLOG_DEFAULT_LANGUAGE)
-        return content.get_absolute_url()
+        from dataaccess import post_data
+        # utilizzo dataaccess per evitare di fare una query ogni volta solo per
+        # recuperare il postcontent e chiedere a lui la url
+        data = post_data(self.id, settings.MICROBLOG_DEFAULT_LANGUAGE)
+        return data['url']
 
     get_url_path = get_absolute_url
 
