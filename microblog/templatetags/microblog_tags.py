@@ -32,7 +32,7 @@ def _fullaccess(ctx):
         return user.is_authenticated()
 
 @fancy_tag(register, takes_context=True)
-def post_list(context, post_type='any', count=None):
+def post_list(context, post_type='any', count=None, year=None):
     posts = dataaccess.post_list(_lang(context))
     if not _fullaccess(context):
         posts = filter(lambda x: x.is_published(), posts)
@@ -40,6 +40,9 @@ def post_list(context, post_type='any', count=None):
         posts = filter(lambda x: x.featured, posts)
     elif post_type == 'non-featured':
         posts = filter(lambda x: not x.featured, posts)
+    if year is not None:
+        year = int(year)
+        posts = filter(lambda x: x.date.year==year, posts)
     if count is not None:
         posts = posts[:count]
     return posts
@@ -94,6 +97,14 @@ def get_post_data(context, pid):
 def get_post_comment(context, post):
     data = dataaccess.post_data(post.id, _lang(context))
     return data['comments']
+
+@register.inclusion_tag('microblog/show_posts_list.html', takes_context=True)
+def show_posts_list(context, posts):
+    ctx = Context(context)
+    ctx.update({
+        'posts': posts,
+    })
+    return ctx
 
 @register.inclusion_tag('microblog/show_post_summary.html', takes_context=True)
 def show_post_summary(context, post):
