@@ -13,20 +13,20 @@ from taggit.models import Tag, TaggedItem
 from decorator import decorator
 
 try:
-    import json as simplejson
+    import json
 except ImportError:
-    import simplejson
+    import simplejson as json
 
-def json(f):
+def render_json(f):
     """
     decoratore da applicare ad una vista per serializzare in json il risultato.
     """
     if dsettings.DEBUG:
         ct = 'text/plain'
-        j = lambda d: simplejson.dumps(d, indent = 2)
+        j = lambda d: json.dumps(d, indent = 2)
     else:
         ct = 'application/json'
-        j = simplejson.dumps
+        j = json.dumps
     def wrapper(func, *args, **kw):
         try:
             result = func(*args, **kw)
@@ -192,7 +192,7 @@ def _trackback_ping(request, content):
     content.new_trackback(**t)
     return success()
 
-@json
+@render_json
 def _comment_count(request, content):
     post = content.post
     if settings.MICROBLOG_COMMENT == 'comment':
