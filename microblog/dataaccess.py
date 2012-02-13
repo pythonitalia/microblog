@@ -91,6 +91,17 @@ def tag_map():
         tmap[o.object_id].add(o.tag)
     return tmap
 
+@cache_me(models=(models.Post,))
+def tagged_posts(name):
+    """
+    restituisce i post taggati con il tag passato
+    """
+    posts = TaggedItem.objects\
+        .filter(content_type__app_label='microblog', content_type__model='post')\
+        .filter(tag__name__iexact=name)\
+        .values_list('object_id', flat=True)
+    return set(posts)
+
 def _i_post_data(sender, **kw):
     if sender is models.Post:
         pid = kw['instance'].id

@@ -32,7 +32,7 @@ def _fullaccess(ctx):
         return user.is_authenticated()
 
 @fancy_tag(register, takes_context=True)
-def post_list(context, post_type='any', count=None, year=None):
+def post_list(context, post_type='any', count=None, year=None, tag=None):
     posts = dataaccess.post_list(_lang(context))
     if not _fullaccess(context):
         posts = filter(lambda x: x.is_published(), posts)
@@ -43,6 +43,9 @@ def post_list(context, post_type='any', count=None, year=None):
     if year is not None:
         year = int(year)
         posts = filter(lambda x: x.date.year==year, posts)
+    if tag is not None:
+        tagged = dataaccess.tagged_posts(tag)
+        posts = filter(lambda x: x.id in tagged, posts)
     if count is not None:
         posts = posts[:count]
     return posts

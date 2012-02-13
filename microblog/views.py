@@ -73,21 +73,10 @@ def post_list_by_year(request, year, month=None):
 
 def tag(request, tag):
     tag = get_object_or_404(Tag, name=tag)
-    post_list = _posts_list(request, featured=None)
-
-    qs = TaggedItem.objects\
-            .filter(content_type__app_label='microblog', content_type__model='post')\
-            .filter(tag=tag)
-
-    tagged_posts = post_list.filter(id__in=qs.values('object_id'))
-    post_list_count = tagged_posts.count()
-    posts = _paginate_posts(tagged_posts, request)
     return render_to_response(
         'microblog/tag.html',
         {
             'tag': tag,
-            'posts': posts,
-            'post_count': post_list_count,
         },
         context_instance = RequestContext(request)
     )
