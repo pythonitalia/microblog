@@ -138,10 +138,10 @@ def _posts_list(request, featured=False):
     else:
         lang = request.LANGUAGE_CODE
 
-    post_list = models.Post.objects.published(lang=lang, user=request.user)
-    if not featured:
-        return post_list
-    return models.Post.objects.filterPostsByFeaturedStatus(post_list, featured=featured)
+    return models.Post.objects\
+        .byLanguage(lang)\
+        .byFeatured(featured)\
+        .published()
 
 def _post_detail(request, content):
     return render_to_response(
