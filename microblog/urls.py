@@ -9,7 +9,7 @@ urlpatterns = patterns('',
         name = 'microblog-full-list'
     ),
     url(
-        r'^feeds/(?P<url>.*)/$',
+        r'^feeds/(?P<url>.*)/?$',
         'django.contrib.syndication.views.feed',
         {'feed_dict': {'latest': feeds.LatestPosts}}
     ),
