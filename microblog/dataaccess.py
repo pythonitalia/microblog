@@ -105,13 +105,20 @@ def tagged_posts(name):
 def _i_post_data(sender, **kw):
     if sender is models.Post:
         pid = kw['instance'].id
+    elif sender is comments.get_model():
+        o = kw['instance']
+        if o.content_type.app_label == 'microblog' and o.content_type.model == 'post':
+            pid = o.object_pk
+        else:
+            pid = None
     else:
         pid = kw['instance'].post_id
     ks = []
-    for l in dsettings.LANGUAGES:
-        ks.append('m:post_data:%s%s' % (pid, l[0]))
+    if pid:
+        for l in dsettings.LANGUAGES:
+            ks.append('m:post_data:%s%s' % (pid, l[0]))
     return ks
-@cache_me(models=(models.Post, models.PostContent),
+@cache_me(models=(models.Post, models.PostContent, comments.get_model()),
     key='m:post_data:%s%s',
     ikey=_i_post_data)
 def post_data(pid, lang):
