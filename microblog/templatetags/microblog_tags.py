@@ -182,7 +182,7 @@ def user_name_for_url(user):
     """
     return slugify('%s-%s' % (user.first_name, user.last_name))
 
-@register.inclusion_tag('microblog/show_post_comments.html', takes_context = True)
+@register.inclusion_tag('microblog/show_post_comments.html', takes_context=True)
 def show_post_comments(context, post):
     ctx = Context(context)
     ctx.update({
@@ -197,4 +197,4 @@ def post_published(q, lang):
     """
     # TODO: al momento q può essere solo un queryset, bisognerebbe prevedere il
     # caso in cui q sia un iterable di post
-    return models.Post.objects.published(q = q, lang = lang)
+    return models.Post.objects.published(q=q, lang=lang)
