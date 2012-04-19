@@ -39,26 +39,20 @@ def render_json(f):
             else:
                 result = j(result)
                 status = 200
-        return HttpResponse(content = result, content_type = ct, status = status)
+        return HttpResponse(content=result, content_type=ct, status=status)
     return decorator(wrapper, f)
 
 def post_list(request):
     return render(request, 'microblog/post_list.html', {})
 
 def category(request, category):
-    category = get_object_or_404(models.Category, name = category)
-    post_list = _posts_list(request, featured=None).filter(category=category)
-    post_list_count = post_list.count()
-    posts = _paginate_posts(post_list, request)
-
+    category = get_object_or_404(models.Category, name=category)
     return render_to_response(
         'microblog/category.html',
         {
             'category': category,
-            'posts': posts,
-            'post_count': post_list_count,
         },
-        context_instance = RequestContext(request)
+        context_instance=RequestContext(request)
     )
 
 def post_list_by_year(request, year, month=None):
