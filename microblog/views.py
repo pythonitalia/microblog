@@ -84,17 +84,13 @@ def author(request, author):
         raise Http404()
     else:
         user = user[0]
-    post_list = _posts_list(request).filter(author = user)
-    post_list_count = post_list.count()
-    posts = _paginate_posts(post_list, request)
+
     return render_to_response(
         'microblog/author.html',
         {
             'author': user,
-            'posts': posts,
-            'post_count': post_list_count,
         },
-        context_instance = RequestContext(request)
+        context_instance=RequestContext(request)
     )
 
 def _paginate_posts(post_list, request):
