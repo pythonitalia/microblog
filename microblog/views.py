@@ -23,7 +23,7 @@ def render_json(f):
     """
     if dsettings.DEBUG:
         ct = 'text/plain'
-        j = lambda d: json.dumps(d, indent = 2)
+        j = lambda d: json.dumps(d, indent=2)
     else:
         ct = 'application/json'
         j = json.dumps
@@ -62,7 +62,7 @@ def post_list_by_year(request, year, month=None):
             'year': year,
             'month': month,
         },
-        context_instance = RequestContext(request)
+        context_instance=RequestContext(request)
     )
 
 def tag(request, tag):
@@ -72,7 +72,7 @@ def tag(request, tag):
         {
             'tag': tag,
         },
-        context_instance = RequestContext(request)
+        context_instance=RequestContext(request)
     )
 
 def author(request, author):
@@ -129,19 +129,19 @@ def _post_detail(request, content):
             'post': content.post,
             'content': content
         },
-        context_instance = RequestContext(request)
+        context_instance=RequestContext(request)
     )
 
 def _trackback_ping(request, content):
     def success():
         x = ('<?xml version="1.0" encoding="utf-8"?>\n'
             '<response><error>0</error></response>')
-        return HttpResponse(content = x, content_type = 'text/xml')
+        return HttpResponse(content=x, content_type='text/xml')
 
     def failure(message=''):
         x = ('<?xml version="1.0" encoding="utf-8"?>\n'
             '<response><error>1</error><message>%s</message></response>') % message
-        return HttpResponse(content = x, content_type = 'text/xml', status = 400)
+        return HttpResponse(content=x, content_type='text/xml', status=400)
 
     if request.method != 'POST':
         return failure('only POST method is supported')
@@ -171,9 +171,9 @@ def _comment_count(request, content):
         from django.contrib.contenttypes.models import ContentType
         model = comments.get_model()
         q = model.objects.filter(
-            content_type = ContentType.objects.get_for_model(post),
-            object_pk = post.id,
-            is_public = True
+            content_type=ContentType.objects.get_for_model(post),
+            object_pk=post.id,
+            is_public=True
         )
         return q.count()
     else:
@@ -184,7 +184,7 @@ def _comment_count(request, content):
             'forum_api_key': settings.MICROBLOG_COMMENT_DISQUS_FORUM_KEY,
             'url': content.get_url(),
         }
-        args = '&'.join('%s=%s' % (k,quote(v)) for k, v in params.items())
+        args = '&'.join('%s=%s' % (k, quote(v)) for k, v in params.items())
         url = settings.MICROBLOG_COMMENT_DISQUS_API_URL + 'get_thread_by_url?%s' % args
 
         resp, page = h.request(url)
@@ -229,7 +229,7 @@ if settings.MICROBLOG_URL_STYLE == 'date':
     def comment_count(request, year, month, day, slug):
         return _comment_count(
             request,
-            content=_get(slug, year, month, day)
+            content = _get(slug, year, month, day)
         )
 elif settings.MICROBLOG_URL_STYLE == 'category':
     def _get(slug, category):
