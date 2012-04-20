@@ -91,7 +91,9 @@ def tag_map():
         tmap[o.object_id].add(o.tag)
     return tmap
 
-@cache_me(models=(models.Post,))
+@cache_me(models=(models.Post,),
+           key = 'm:tagged_posts:%s',
+           ikey = 'm:tagged_posts:%s')
 def tagged_posts(name):
     """
     restituisce i post taggati con il tag passato
