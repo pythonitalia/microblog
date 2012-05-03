@@ -96,6 +96,11 @@ def tags_list(context):
             tags[t.name] += 1
     return sorted(tags.items())
 
+@register.filter
+def post_tags(post):
+    tmap = dataaccess.tag_map()
+    return tmap[post.id]
+
 @fancy_tag(register, takes_context=True)
 def get_post_data(context, pid):
     return dataaccess.post_data(pid, _lang(context))
