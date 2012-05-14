@@ -344,9 +344,12 @@ if settings.MICROBLOG_EMAIL_INTEGRATION:
         body_html = html.tostring(hdoc)
 
         # per i client di posta che non supportano l'html ecco una versione in
-        # solo test
+        # solo testo
         import html2text
+        x = html2text.IGNORE_IMAGES
+        html2text.IGNORE_IMAGES = True
         body_text = html2text.html2text(body_html)
+        html2text.IGNORE_IMAGES = x
 
         for r in recipients:
             log.info('"%s" email to "%s"', instance.headline.encode('utf-8'), r)

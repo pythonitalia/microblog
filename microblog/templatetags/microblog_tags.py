@@ -24,7 +24,7 @@ def _lang(ctx):
         return settings.MICROBLOG_DEFAULT_LANGUAGE
 
 @fancy_tag(register, takes_context=True)
-def post_list(context, post_type='any', count=None, year=None, tag=None):
+def post_list(context, post_type='any', count=None, year=None, tag=None, category=None, author=None):
     posts = dataaccess.post_list(_lang(context))
     posts = settings.MICROBLOG_POST_FILTER(posts, context.get('user'))
     if post_type == 'featured':
@@ -33,10 +33,14 @@ def post_list(context, post_type='any', count=None, year=None, tag=None):
         posts = filter(lambda x: not x.featured, posts)
     if year is not None:
         year = int(year)
-        posts = filter(lambda x: x.date.year==year, posts)
+        posts = filter(lambda x: x.date.year == year, posts)
     if tag is not None:
         tagged = dataaccess.tagged_posts(tag)
         posts = filter(lambda x: x.id in tagged, posts)
+    if category is not None:
+        posts = filter(lambda x: x.category == category, posts)
+    if author is not None:
+        posts = filter(lambda x: x.author == author, posts)
     if count is not None:
         posts = posts[:count]
     return posts
@@ -82,6 +86,11 @@ def tags_list(context):
         for t in tmap.get(p.id, []):
             tags[t.name] += 1
     return sorted(tags.items())
+
+@register.filter
+def post_tags(post):
+    tmap = dataaccess.tag_map()
+    return tmap[post.id]
 
 @fancy_tag(register, takes_context=True)
 def get_post_data(context, pid):
@@ -169,7 +178,7 @@ def user_name_for_url(user):
     """
     return slugify('%s-%s' % (user.first_name, user.last_name))
 
-@register.inclusion_tag('microblog/show_post_comments.html', takes_context = True)
+@register.inclusion_tag('microblog/show_post_comments.html', takes_context=True)
 def show_post_comments(context, post):
     ctx = Context(context)
     ctx.update({
@@ -184,4 +193,4 @@ def post_published(q, lang):
     """
     # TODO: al momento q può essere solo un queryset, bisognerebbe prevedere il
     # caso in cui q sia un iterable di post
-    return models.Post.objects.published(q = q, lang = lang)
+    return models.Post.objects.published(q=q, lang=lang)

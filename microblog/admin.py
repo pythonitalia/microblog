@@ -37,6 +37,7 @@ class PostAdmin(admin.ModelAdmin):
     form = PostForm
     date_hierarchy = 'date'
     list_display = ('headline', 'date', 'author', 'status')
+    ordering = ('-date',)
 
     def headline(self, obj):
         contents = dict((c.language, c) for c in obj.postcontent_set.all())
