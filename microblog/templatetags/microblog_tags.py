@@ -23,19 +23,10 @@ def _lang(ctx):
     except KeyError:
         return settings.MICROBLOG_DEFAULT_LANGUAGE
 
-def _fullaccess(ctx):
-    try:
-        user = ctx['user']
-    except KeyError:
-        return False
-    else:
-        return user.is_authenticated()
-
 @fancy_tag(register, takes_context=True)
 def post_list(context, post_type='any', count=None, year=None, tag=None):
     posts = dataaccess.post_list(_lang(context))
-    if not _fullaccess(context):
-        posts = filter(lambda x: x.is_published(), posts)
+    posts = settings.MICROBLOG_POST_FILTER(posts, context.get('user'))
     if post_type == 'featured':
         posts = filter(lambda x: x.featured, posts)
     elif post_type == 'non-featured':

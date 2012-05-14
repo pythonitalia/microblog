@@ -133,6 +133,8 @@ def _posts_list(request, featured=False):
         .published()
 
 def _post_detail(request, content):
+    if not settings.MICROBLOG_POST_FILTER([content.post], request.user):
+        raise Http404()
     return render_to_response(
         'microblog/post_detail.html',
         {

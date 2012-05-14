@@ -91,3 +91,10 @@ if MICROBLOG_POST_LIST_PAGINATION and MICROBLOG_POST_PER_PAGE < 1:
     raise ImproperlyConfigured('MICROBLOG_POST_PER_PAGE must be greater than zero')
 
 MICROBLOG_UPLOAD_TO = getattr(settings, 'MICROBLOG_UPLOAD_TO', 'microblog')
+
+def MICROBLOG_POST_FILTER(posts, user):
+    if user and user.is_authenticated():
+        return posts
+    else:
+        return filter(lambda x: x.is_published(), posts)
+MICROBLOG_POST_FILTER = getattr(settings, 'MICROBLOG_POST_FILTER', MICROBLOG_POST_FILTER)
