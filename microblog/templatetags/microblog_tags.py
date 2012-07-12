@@ -67,7 +67,7 @@ def author_list(context):
     authors = defaultdict(lambda: 0)
     for p in posts:
         authors[p.author] += 1
-    return sorted(authors.items(), key=lambda x: x[0].author.first_name + x[0].author.last_name)
+    return sorted(authors.items(), key=lambda x: x[0].first_name + x[0].last_name)
 
 @fancy_tag(register, takes_context=True)
 def category_list(context):
