@@ -1,6 +1,10 @@
 # -*- coding: UTF-8 -*-
 from django.conf import settings as dsettings
-from django.contrib.syndication.feeds import Feed, FeedDoesNotExist
+try:
+    from django.contrib.syndication.views import Feed, FeedDoesNotExist
+except ImportError:
+    # django < 1.4
+    from django.contrib.syndication.feeds import Feed, FeedDoesNotExist
 from django.core.exceptions import ObjectDoesNotExist
 
 from microblog import models

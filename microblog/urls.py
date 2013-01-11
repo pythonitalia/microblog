@@ -2,6 +2,14 @@
 from django.conf.urls.defaults import *
 from microblog import feeds, settings
 
+try:
+    from django.contrib.syndication.views import Feed
+except ImportError:
+    # django < 1.4
+    feed_name = 'django.contrib.syndication.views.feed'
+else:
+    feed_name = 'django.contrib.syndication.views.Feed'
+
 urlpatterns = patterns('',
     url(
         r'^$',
@@ -10,7 +18,7 @@ urlpatterns = patterns('',
     ),
     url(
         r'^feeds/(?P<url>.*)/?$',
-        'django.contrib.syndication.views.feed',
+        feed_name,
         {'feed_dict': {'latest': feeds.LatestPosts}}
     ),
     url(
