@@ -28,6 +28,9 @@ if MICROBLOG_PINGBACK_SERVER:
 
 MICROBLOG_TITLE = getattr(settings, 'MICROBLOG_TITLE', 'My Microblog')
 MICROBLOG_DESCRIPTION = getattr(settings, 'MICROBLOG_DESCRIPTION', '')
+MICROBLOG_AUTHOR_NAME = getattr(settings, 'MICROBLOG_AUTHOR_NAME', None)
+MICROBLOG_AUTHOR_EMAIL = getattr(settings, 'MICROBLOG_AUTHOR_EMAIL', None)
+MICROBLOG_AUTHOR_LINK = getattr(settings, 'MICROBLOG_AUTHOR_LINK', None)
 
 # configure the moderation system:
 # None - moderation disabled

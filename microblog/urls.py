@@ -1,51 +1,22 @@
 # -*- coding: UTF-8 -*-
-from django.conf.urls.defaults import *
+from django.conf.urls.defaults import patterns, url
 from microblog import feeds, settings
 
-try:
-    from django.contrib.syndication.views import Feed
-except ImportError:
-    # django < 1.4
-    feed_name = 'django.contrib.syndication.views.feed'
-else:
-    feed_name = 'django.contrib.syndication.views.Feed'
-
-urlpatterns = patterns('',
+urlpatterns = patterns('microblog.views',
     url(
-        r'^$',
-        'microblog.views.post_list',
-        name = 'microblog-full-list'
-    ),
+        r'^$', 'post_list', name='microblog-full-list'),
     url(
-        r'^feeds/(?P<url>.*)/?$',
-        feed_name,
-        {'feed_dict': {'latest': feeds.LatestPosts}}
-    ),
+        r'^feeds/latest/?$', feeds.LatestPosts(), name='microblog-feeds-latest',),
     url(
-        r'^categories/(?P<category>.*)$',
-        'microblog.views.category',
-        name = 'microblog-category',
-    ),
+        r'^categories/(?P<category>.*)$', 'category', name='microblog-category',),
     url(
-        r'^years/(?P<year>\d{4})/$',
-        'microblog.views.post_list_by_year',
-        name = 'microblog-list-by-year',
-    ),
+        r'^years/(?P<year>\d{4})/$', 'post_list_by_year', name='microblog-list-by-year',),
     url(
-        r'^years/(?P<year>\d{4})/(?P<month>\d{1,2})/$',
-        'microblog.views.post_list_by_year',
-        name = 'microblog-list-by-month',
-    ),
+        r'^years/(?P<year>\d{4})/(?P<month>\d{1,2})/$', 'post_list_by_year', name='microblog-list-by-month',),
     url(
-        r'^tags/(?P<tag>.*)$',
-        'microblog.views.tag',
-        name = 'microblog-tag',
-    ),
+        r'^tags/(?P<tag>.*)$', 'tag', name='microblog-tag',),
     url(
-        r'^authors/(?P<author>.*)$',
-        'microblog.views.author',
-        name = 'microblog-author',
-    ),
+        r'^authors/(?P<author>.*)$', 'author', name='microblog-author',),
 )
 
 if settings.MICROBLOG_PINGBACK_SERVER:
@@ -58,17 +29,17 @@ if settings.MICROBLOG_URL_STYLE == 'date':
         url(
             r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/?$',
             'microblog.views.post_detail',
-            name = 'microblog-post-detail'
+            name='microblog-post-detail'
         ),
         url(
             r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/trackback$',
             'microblog.views.trackback_ping',
-            name = 'microblog-post-trackback'
+            name='microblog-post-trackback'
         ),
         url(
             r'^(?P<year>\d{4})/(?P<month>\d{2})/(?P<day>\w{1,2})/(?P<slug>[^/]+)/comment_count$',
             'microblog.views.comment_count',
-            name = 'microblog-post-comment-count'
+            name='microblog-post-comment-count'
         ),
     )
 elif settings.MICROBLOG_URL_STYLE == 'category':
@@ -76,16 +47,16 @@ elif settings.MICROBLOG_URL_STYLE == 'category':
         url(
             r'^(?P<category>[^/]+)/(?P<slug>[^/]+)/?$',
             'microblog.views.post_detail',
-            name = 'microblog-post-detail'
+            name='microblog-post-detail'
         ),
         url(
             r'^(?P<category>[^/]+)/(?P<slug>[^/]+)/trackback$',
             'microblog.views.trackback_ping',
-            name = 'microblog-post-trackback'
+            name='microblog-post-trackback'
         ),
         url(
             r'^(?P<category>[^/]+)/(?P<slug>[^/]+)/comment_count$',
             'microblog.views.comment_count',
-            name = 'microblog-post-comment-count'
+            name='microblog-post-comment-count'
         ),
     )
