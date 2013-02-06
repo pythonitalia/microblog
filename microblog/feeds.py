@@ -25,7 +25,8 @@ class LatestPosts(Feed):
         self.languages = D((l, l) for l, n in dsettings.LANGUAGES)
         self.languages[None] = settings.MICROBLOG_DEFAULT_LANGUAGE
 
-    def get_object(self, lang_code):
+    def get_object(self, request, lang_code=None):
+        return None
         if not lang_code:
             return None
         elif len(lang_code) > 1:

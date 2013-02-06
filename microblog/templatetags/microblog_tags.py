@@ -19,9 +19,10 @@ register = template.Library()
 
 def _lang(ctx):
     try:
-        return ctx['LANGUAGE_CODE']
+        l = ctx['LANGUAGE_CODE']
     except KeyError:
-        return settings.MICROBLOG_DEFAULT_LANGUAGE
+        l = settings.MICROBLOG_DEFAULT_LANGUAGE
+    return l.split('-', 1)[0]
 
 @fancy_tag(register, takes_context=True)
 def post_list(context, post_type='any', count=None, year=None, tag=None, category=None, author=None):
