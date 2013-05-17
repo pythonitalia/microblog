@@ -55,7 +55,7 @@ class Post(models.Model, UrlMixin):
     allow_comments = models.BooleanField()
     category = models.ForeignKey(Category)
     featured = models.BooleanField(default=False)
-    image = models.URLField(verify_exists=False, null=True, blank=True)
+    image = models.URLField(null=True, blank=True)
 
     tags = TaggableManager()
 
