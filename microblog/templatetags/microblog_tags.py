@@ -88,6 +88,27 @@ def tags_list(context):
             tags[t.name] += 1
     return sorted(tags.items())
 
+@fancy_tag(register, takes_context=True)
+def opengraph_meta(context, pid):
+    post_data = dataaccess.post_data(pid, _lang(context))
+    meta = (
+        ('og:title', post_data['content'].headline),
+        ('og:type', 'article'),
+        ('og:url', post_data['url']),
+        ('og:image', post_data['image']),
+        ('article:published_time', post_data['post'].date.isoformat()),
+        ('article:section', post_data['post'].category.name),
+        ('article:tag', post_data['tags']),
+        ('article:author:first_name', post_data['post'].author.first_name),
+        ('article:author:last_name', post_data['post'].author.last_name),
+    )
+    html = []
+    for key, value in meta:
+        if not isinstance(value, list):
+            value = [value]
+        html.extend(['<meta property="%s" content="%s" />' % (key, v) for v in value])
+    return html_safe('\n'.join(html))
+
 @register.filter
 def post_tags(post):
     tmap = dataaccess.tag_map()

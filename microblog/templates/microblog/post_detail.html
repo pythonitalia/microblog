@@ -1,5 +1,8 @@
 {% extends "microblog/base.html" %}
 {% load microblog_tags %}
+{% block EXTRA_HEAD %}
+    {% opengraph_meta post.id %}
+{% endblock %}
 {% block BLOG_HEADER %}
   <h1>Posts Detail</h1>
 {% endblock %}
