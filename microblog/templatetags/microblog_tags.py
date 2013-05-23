@@ -96,7 +96,7 @@ def opengraph_meta(context, pid):
         ('og:title', post_data['content'].headline),
         ('og:type', 'article'),
         ('og:url', post_data['url']),
-        ('og:image', post_data['image']),
+        ('og:image', post_data['post'].image),
         ('article:published_time', post_data['post'].date.isoformat()),
         ('article:section', post_data['post'].category.name),
         ('article:tag', post_data['tags']),
