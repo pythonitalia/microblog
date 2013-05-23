@@ -8,6 +8,7 @@ from django.contrib.sites.models import Site
 from django.template import Context
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext
+from django.utils.safestring import mark_safe
 
 from microblog import dataaccess
 from microblog import models
@@ -107,7 +108,7 @@ def opengraph_meta(context, pid):
         if not isinstance(value, list):
             value = [value]
         html.extend(['<meta property="%s" content="%s" />' % (key, v) for v in value])
-    return html_safe('\n'.join(html))
+    return mark_safe('\n'.join(html))
 
 @register.filter
 def post_tags(post):
