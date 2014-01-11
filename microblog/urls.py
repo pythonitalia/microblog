@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls import patterns, url
 from microblog import feeds, settings
 
 urlpatterns = patterns('microblog.views',
