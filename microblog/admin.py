@@ -1,40 +1,11 @@
 # -*- coding: UTF-8 -*-
 import datetime
-
+from microblog import models
 from django import forms
-from django.contrib import admin
 from django.conf import settings
-
-import models
-
-class PostForm(forms.ModelForm):
-    def clean(self):
-        data = self.cleaned_data
-        # mi assicuro che se una lingua è stata utilizzata i campi
-        # headline, slug e summary devono essere riempiti
-        # inoltre mi assicuro che almeno una lingua sia stata usata
-        valid_langs = []
-        language_fields = 'headline', 'slug', 'summary', 'body'
-        needed_fields = set(('headline', 'slug', 'summary'))
-        for l, lname in settings.LANGUAGES:
-            lfield = []
-            for fname in language_fields:
-                key = fname + '_' + l
-                if data[key]:
-                    lfield.append(fname)
-            if lfield:
-                if needed_fields.intersection(set(lfield)) != needed_fields:
-                    raise forms.ValidationError('Se utilizzi una lingua i campi "headline", "slug" e "summary" sono obbligatori')
-                else:
-                    valid_langs.append(l)
-
-        if not valid_langs:
-            raise forms.ValidationError('Devi usare almeno una lingua')
-            
-        return data
+from django.contrib import admin
 
 class PostAdmin(admin.ModelAdmin):
-    form = PostForm
     date_hierarchy = 'date'
     list_display = ('headline', 'date', 'author', 'status')
     ordering = ('-date',)
@@ -52,62 +23,78 @@ class PostAdmin(admin.ModelAdmin):
             return '[No headline]'
 
     def get_fieldsets(self, request, obj=None, **kwargs):
-        fieldsets = [
-            (None, {
-                'fields': ('date', 'author', 'status', 'tags', 'category', 'allow_comments', 'featured', 'image')
-            })
-        ]
+        fieldsets = super(PostAdmin, self).get_fieldsets(request, obj=obj, **kwargs)
         prepopulated_fields = {}
-        lang_fieldsets = {}
         for l, lname in settings.LANGUAGES:
-            f = (lname, { 'fields': [] } )
-            lang_fieldsets[l] = f[1]
-            fieldsets.append(f)
+            fieldsets.append((
+                lname, {
+                    'fields': (
+                        'headline_' + l,
+                        'slug_' + l,
+                        'summary_' + l,
+                        'body_' + l,
+                    )
+                }))
             prepopulated_fields['slug_' + l] = ('headline_' + l,)
         self.prepopulated_fields = prepopulated_fields
-
-        form = self.get_form(request, obj)
-        for name in form.base_fields:
-            if '_' not in name:
-                continue
-            l = name.rsplit('_', 1)[1]
-            if l.startswith('comments'):
-                # houch, allow_comments ha l'_
-                continue
-            lang_fieldsets[l]['fields'].append(name)
         return fieldsets
 
     def get_form(self, request, obj=None, **kwargs):
-        form = super(PostAdmin, self).get_form(request, obj, **kwargs)
+        contents = {}
         if obj:
-            contents = dict((c.language, c) for c in obj.postcontent_set.all())
+            contents = dict([(c.language, c) for c in obj.postcontent_set.all()])
         def getContent(lang, field):
             try:
                 return getattr(contents[lang], field, '')
             except KeyError:
                 return ''
-        # a differenza delle deadline qui devo aggiungere 4 campi
-        #   headline
-        #   slug
-        #   summary
-        #   body
-        for l, _ in settings.LANGUAGES:
-            fields = {
-                'headline': forms.CharField(required=False, max_length=200),
-                'slug': forms.CharField(required=False, max_length=50),
-                'summary': forms.CharField(required=False, widget=forms.Textarea),
-                'body': forms.CharField(required=False, widget=forms.Textarea),
-            }
-            for k in 'headline', 'slug', 'summary', 'body':
-                f = fields[k]
-                f.label = '%s (%s)' % (k, l.split('-', 1)[0].upper())
-                if obj:
-                    f.initial = getContent(l, k)
-                form.base_fields[k + '_' + l] = f
-        # un po' di valori di default sensati
-        form.base_fields['date'].initial = datetime.datetime.now()
-        form.base_fields['author'].initial = request.user.id
-        return form
+        class PostForm(forms.ModelForm):
+            class Meta:
+                model = models.Post
+                fields = ('date', 'author', 'status', 'tags', 'category', 'allow_comments', 'featured', 'image')
+            def __init__(self, *args, **kw):
+                super(PostForm, self).__init__(*args, **kw)
+                for lang_code, _ in settings.LANGUAGES:
+                    fields = {
+                        'headline': forms.CharField(required=False, max_length=200),
+                        'slug': forms.CharField(required=False, max_length=50),
+                        'summary': forms.CharField(required=False, widget=forms.Textarea),
+                        'body': forms.CharField(required=False, widget=forms.Textarea),
+                    }
+                    for field_name in 'headline', 'slug', 'summary', 'body':
+                        f = fields[field_name]
+                        f.label = '%s (%s)' % (field_name, lang_code.split('-', 1)[0].upper())
+                        f.initial = getContent(lang_code, field_name)
+                        self.fields[field_name + '_' + lang_code] = f
+                # un po' di valori di default sensati
+                self.fields['date'].initial = datetime.datetime.now()
+                self.fields['author'].initial = request.user.id
+
+            def clean(self):
+                data = self.cleaned_data
+                # mi assicuro che se una lingua è stata utilizzata i campi
+                # headline, slug e summary devono essere riempiti
+                # inoltre mi assicuro che almeno una lingua sia stata usata
+                valid_langs = []
+                language_fields = 'headline', 'slug', 'summary', 'body'
+                needed_fields = set(('headline', 'slug', 'summary'))
+                for l, lname in settings.LANGUAGES:
+                    lfield = []
+                    for fname in language_fields:
+                        key = fname + '_' + l
+                        if data[key]:
+                            lfield.append(fname)
+                    if lfield:
+                        if needed_fields.intersection(set(lfield)) != needed_fields:
+                            raise forms.ValidationError('Se utilizzi una lingua i campi "headline", "slug" e "summary" sono obbligatori')
+                        else:
+                            valid_langs.append(l)
+
+                if not valid_langs:
+                    raise forms.ValidationError('Devi usare almeno una lingua')
+
+                return data
+        return PostForm
 
     def save_model(self, request, obj, form, change):
         obj.save()
