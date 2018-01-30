@@ -6,6 +6,7 @@ from django.http import HttpResponse, Http404
 from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.template.defaultfilters import slugify
+from django.utils.translation import get_language
 
 from microblog import models, settings
 
@@ -210,9 +211,24 @@ def _post404(f):
 
 if settings.MICROBLOG_URL_STYLE == 'date':
     def _get(slug, year, month, day):
-        return models.PostContent.objects\
+        """
+        While ugly, this allows to support the language switch from the
+        pycon site language chooser
+        As microblog uses the slug to pick the "right" language
+        to support language change we have two options:
+
+        * load all postcontent and put the right slug in the language chooser
+        * check the current language against the current postcontent and pick
+          the right postcontent if they don't match
+        """
+        content = models.PostContent.objects\
             .select_related('post')\
             .getBySlugAndDate(slug, year, month, day)
+        if content.language != get_language():
+            return content.post.postcontent_set.get(language=get_language())
+        else:
+            return content
+
     @_post404
     def post_detail(request, year, month, day, slug):
         return _post_detail(
@@ -235,9 +251,15 @@ if settings.MICROBLOG_URL_STYLE == 'date':
         )
 elif settings.MICROBLOG_URL_STYLE == 'category':
     def _get(slug, category):
-        return models.PostContent.objects\
+        # See same function above
+        content = models.PostContent.objects\
             .select_related('post')\
             .getBySlugAndCategory(slug, category)
+        if content.language != get_language():
+            return content.post.postcontent_set.get(language=get_language())
+        else:
+            return content
+
     @_post404
     def post_detail(request, category, slug):
         return _post_detail(
